@@ -54,7 +54,7 @@ ISR(TIMER3_COMPA_vect){
 }
 //turns off firing pulse for heater 1
 ISR(TIMER3_COMPB_vect){
-  PORTA &= !B00000001;                //**********can have all the pins falling edge (PORTA &= !B00000111) test changes
+  PORTA &= !B00000001;                //**********can have all the pins falling edge (PORTA &= !B00000111)
 }
 
 //firing pulse for heater 2
