@@ -2,6 +2,7 @@
 #define PID_AC_Heater_h
 
 #include <Arduino.h>
+#include <PID_v1.h>
 
 class ACHeater{
     public:
