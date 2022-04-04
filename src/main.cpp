@@ -1,11 +1,15 @@
 #include <Arduino.h>
 
+//zero cross pin for hardware interrupt
+const int zero_cross_pin = 18;
+
 
 const int pulse_delay_max = 16600;
 
 int pulse_delay_1 = 0;
 int pulse_delay_2 = 0;
 int pulse_delay_3 = 0;
+bool zero_cross = false;
 
 
 void setup() {
@@ -35,27 +39,41 @@ void setup() {
   //firing delays falling edge
   OCR5A = pulse_delay_max;
   
+  attachInterrupt(zero_cross_pin, reset_timer, FALLING);
 
   sei();  //continue interrupts
 }
 
+void reset_timer(){
+  TCNT4 = 0;
+  TCNT5 = 0;
+}
 
 //turns on firing pulse for heater 1
 ISR(TIMER4_COMPA_vect){
-  PORTA |= B00000001;
+  if(zero_cross){
+    PORTA |= B00000001;    
+  }
+
 }
 //turns on firing pulse for heater 2
 ISR(TIMER4_COMPB_vect){
-  PORTA |= B00000010;
+  if(zero_cross){
+    PORTA |= B00000010;
+  }
+
 }
 //turns on firing pulse for heater 3
-ISR(TIMER4_COMPB_vect){
-  PORTA |= B00000100;
+ISR(TIMER4_COMPC_vect){
+  if(zero_cross){
+    PORTA |= B00000100;
+  }
 }
 
 //turns off firing pulse for heater 1,2,3
 ISR(TIMER5_COMPA_vect){
   PORTA &= !B00000111; 
+  zero_cross = false;
 }
 
 
