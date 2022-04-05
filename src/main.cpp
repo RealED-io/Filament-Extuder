@@ -1,4 +1,11 @@
 #include <Arduino.h>
+#include <string.h>
+
+//for testing
+const unsigned int MAX_MESSAGE_LENGTH = 6;
+unsigned int number = 0;
+
+
 
 //zero cross pin for hardware interrupt
 const int zero_cross_pin = 18;
@@ -12,7 +19,14 @@ int pulse_delay_3 = 0;
 bool zero_cross = false;
 
 
+const int readtempDelay = 500;
+unsigned long currentMillis = 0;
+unsigned long previousMillis = 0;
+
+void reset_timer();
+
 void setup() {
+  Serial.begin(9600);
   cli(); //stops interrupts
 
 
@@ -39,12 +53,13 @@ void setup() {
   //firing delays falling edge
   OCR5A = pulse_delay_max;
   
-  attachInterrupt(zero_cross_pin, reset_timer, FALLING);
+  attachInterrupt(zero_cross_pin, reset_timer, RISING);
 
   sei();  //continue interrupts
 }
 
 void reset_timer(){
+  zero_cross = true;
   TCNT4 = 0;
   TCNT5 = 0;
 }
@@ -74,10 +89,70 @@ ISR(TIMER4_COMPC_vect){
 ISR(TIMER5_COMPA_vect){
   PORTA &= !B00000111; 
   zero_cross = false;
+
+  //for testing
+  reset_timer();
 }
 
 
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  // currentMillis = millis();
+  // if(currentMillis - previousMillis >= readtempDelay){
+  //   previousMillis += readtempDelay;
+    
+    //*************insert PID compute loop here
+
+
+
+
+  //for testing
+  if (Serial.available() > 0)
+ {
+    //Create a place to hold the incoming message
+    static char message[MAX_MESSAGE_LENGTH];
+    static unsigned int message_pos = 0;
+
+    //Read the next available byte in the serial receive buffer
+    char inByte = Serial.read();
+
+    //Message coming in (check not terminating character) and guard for over message size
+    if ( inByte != '\n' && (message_pos < MAX_MESSAGE_LENGTH - 1) )
+    {
+      //Add the incoming byte to our message
+      message[message_pos] = inByte;
+      message_pos++;
+    }
+
+    //Full message received...
+    else
+    {
+      //Add null character to string
+      message[message_pos] = '\0';
+
+      Serial.println(message);
+      
+      if(message[0] == 'a'){
+        Serial.println("case a");
+        OCR4A = number;
+
+      }else if (message[0] == 'b')
+      {
+        Serial.println("case b");
+        OCR4B = number;
+      }else if (message[0] == 'c')
+      {
+        Serial.println("case c");
+        OCR4C = number;
+      }else
+      {
+        number = atoi(message);
+        Serial.println(number);
+      }
+      
+
+      //Reset for the next message
+      message_pos = 0;
+   }
+ }
 }
