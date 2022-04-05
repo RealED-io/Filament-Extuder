@@ -2,7 +2,7 @@
 #define ACHeater_h
 
 #include <Arduino.h>
-#include <PID_v1.h>
+
 
 class ACHeater{
     public:
@@ -19,11 +19,6 @@ class ACHeater{
         double kD;
 
         unsigned int Max_Pulse_Delay;
-
-        void PID_compute();
-
-    private:
-
 };
 
 #endif
