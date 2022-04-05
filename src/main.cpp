@@ -1,29 +1,28 @@
 #include <Arduino.h>
 #include <string.h>
+#include <PID_v1.h>
 
-//for testing
-const unsigned int MAX_MESSAGE_LENGTH = 6;
-unsigned int number = 0;
+#include "ACHeater.h"
 
-
-
-//zero cross pin for hardware interrupt
-const int zero_cross_pin = 18;
+// //for testing
+// const unsigned int MAX_MESSAGE_LENGTH = 6;
+// unsigned int number = 0;
 
 
+
+//constants
+const int zero_cross_pin = 18;    //zero cross pin for hardware interrupt
 const int pulse_delay_max = 16600;
-
-int pulse_delay_1 = 0;
-int pulse_delay_2 = 0;
-int pulse_delay_3 = 0;
 bool zero_cross = false;
-
-
 const int readtempDelay = 500;
 unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
 
+
+//function declarations
 void reset_timer();
+
+
 
 void setup() {
   Serial.begin(9600);
@@ -46,9 +45,9 @@ void setup() {
   TIMSK5 |= B00000010;  //enable compare match 5A for timer reset
 
   //firing delays rising edge
-  OCR4A = pulse_delay_1;
-  OCR4B = pulse_delay_2;
-  OCR4C = pulse_delay_3;
+  OCR4A = 0;
+  OCR4B = 0;
+  OCR4C = 0;
 
   //firing delays falling edge
   OCR5A = pulse_delay_max;
@@ -90,16 +89,16 @@ ISR(TIMER5_COMPA_vect){
   PORTA &= !B00000111; 
   zero_cross = false;
 
-  //for testing
-  reset_timer();
+  // //for testing
+  // reset_timer();
 }
 
 
 
 void loop() {
-  // currentMillis = millis();
-  // if(currentMillis - previousMillis >= readtempDelay){
-  //   previousMillis += readtempDelay;
+  currentMillis = millis();
+  if(currentMillis - previousMillis >= readtempDelay){
+    previousMillis += readtempDelay;
     
     //*************insert PID compute loop here
 
@@ -107,52 +106,52 @@ void loop() {
 
 
   //for testing
-  if (Serial.available() > 0)
- {
-    //Create a place to hold the incoming message
-    static char message[MAX_MESSAGE_LENGTH];
-    static unsigned int message_pos = 0;
+//   if (Serial.available() > 0)
+//  {
+//     //Create a place to hold the incoming message
+//     static char message[MAX_MESSAGE_LENGTH];
+//     static unsigned int message_pos = 0;
 
-    //Read the next available byte in the serial receive buffer
-    char inByte = Serial.read();
+//     //Read the next available byte in the serial receive buffer
+//     char inByte = Serial.read();
 
-    //Message coming in (check not terminating character) and guard for over message size
-    if ( inByte != '\n' && (message_pos < MAX_MESSAGE_LENGTH - 1) )
-    {
-      //Add the incoming byte to our message
-      message[message_pos] = inByte;
-      message_pos++;
-    }
+//     //Message coming in (check not terminating character) and guard for over message size
+//     if ( inByte != '\n' && (message_pos < MAX_MESSAGE_LENGTH - 1) )
+//     {
+//       //Add the incoming byte to our message
+//       message[message_pos] = inByte;
+//       message_pos++;
+//     }
 
-    //Full message received...
-    else
-    {
-      //Add null character to string
-      message[message_pos] = '\0';
+//     //Full message received...
+//     else
+//     {
+//       //Add null character to string
+//       message[message_pos] = '\0';
 
-      Serial.println(message);
+//       Serial.println(message);
       
-      if(message[0] == 'a'){
-        Serial.println("case a");
-        OCR4A = number;
+//       if(message[0] == 'a'){
+//         Serial.println("case a");
+//         OCR4A = number;
 
-      }else if (message[0] == 'b')
-      {
-        Serial.println("case b");
-        OCR4B = number;
-      }else if (message[0] == 'c')
-      {
-        Serial.println("case c");
-        OCR4C = number;
-      }else
-      {
-        number = atoi(message);
-        Serial.println(number);
-      }
+//       }else if (message[0] == 'b')
+//       {
+//         Serial.println("case b");
+//         OCR4B = number;
+//       }else if (message[0] == 'c')
+//       {
+//         Serial.println("case c");
+//         OCR4C = number;
+//       }else
+//       {
+//         number = atoi(message);
+//         Serial.println(number);
+//       }
       
 
-      //Reset for the next message
-      message_pos = 0;
-   }
- }
+//       //Reset for the next message
+//       message_pos = 0;
+//    }
+//  }
 }
