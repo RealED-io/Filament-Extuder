@@ -6,17 +6,17 @@
 
 class ACHeater{
     public:
-        ACHeater();
-        uint16_t kP;
-        uint16_t kI;
-        uint16_t kD;
-        uint16_t P;
-        uint16_t I;
-        uint16_t D;  
-        int16_t set_temp;      
-        int16_t temp;
+        ACHeater(double, double, double,
+                    double, double, double);
+        double kP;
+        double kI;
+        double kD;
 
-        uint16_t PID_compute();
+        double set_temp;        //PID setpoint  
+        double temp;            //PID input
+        double pulse_delay;     //PID output
+
+        void PID_compute();
 
     private:
 
