@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <string.h>
 #include <PID_v1.h>
+#include <max6675.h>
 
 #include "ACHeater.h"
 
@@ -18,17 +19,32 @@ const int readtempDelay = 500;
 unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
 
-ACHeater heaterA(0,0,0,
-                  0,0,0);
+//classes init
+ACHeater heaterA(0,0,0,           //temp, pulse delay, set
+                  1,1,1);         //kP, kI, kD
+ACHeater heaterB(0,0,0,           //temp, pulse delay, set
+                  1,1,1);         //kP, kI, kD
+ACHeater heaterC(0,0,0,           //temp, pulse delay, set
+                  1,1,1);         //kP, kI, kD //***********************************add thermocouple pins to the class
+
+PID PID_heaterA(&heaterA.Temp, &heaterA.Pulse_Delay, &heaterA.Set_Temp,
+                heaterA.kP, heaterA.kI, heaterA.kD, REVERSE);
+PID PID_heaterB(&heaterB.Temp, &heaterB.Pulse_Delay, &heaterB.Set_Temp,
+                heaterB.kP, heaterB.kI, heaterB.kD, REVERSE);
+PID PID_heaterC(&heaterC.Temp, &heaterC.Pulse_Delay, &heaterC.Set_Temp,
+                heaterC.kP, heaterC.kI, heaterC.kD, REVERSE);
+
+
 
 
 //function declarations
 void reset_timer();
+// void PID_compute_routine();
 
 
 
 void setup() {
-  Serial.begin(9600);
+  // Serial.begin(9600);   //for testing
   cli(); //stops interrupts
 
 
@@ -104,7 +120,7 @@ void loop() {
     previousMillis += readtempDelay;
     
     //*************insert PID compute loop here
-
+    
 
 
 
