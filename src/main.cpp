@@ -18,6 +18,9 @@ const int readtempDelay = 500;
 unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
 
+ACHeater heaterA(0,0,0,
+                  0,0,0);
+
 
 //function declarations
 void reset_timer();
