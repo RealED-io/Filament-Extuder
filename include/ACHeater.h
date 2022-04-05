@@ -7,7 +7,7 @@
 class ACHeater{
     public:
         ACHeater(double, double, double,
-                    double, double, double, unsigned int);
+                    double, double, double);
 
 
         double Temp;            //PID input
@@ -17,8 +17,6 @@ class ACHeater{
         double kP;
         double kI;
         double kD;
-
-        unsigned int Max_Pulse_Delay;
 };
 
 #endif
