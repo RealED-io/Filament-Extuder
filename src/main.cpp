@@ -134,6 +134,14 @@ ISR(TIMER5_COMPA_vect){
 
 
 void loop() {
+  PID_heaterA.Compute();
+  PID_heaterB.Compute();
+  PID_heaterC.Compute();
+
+  OCR4A = heaterA.Pulse_Delay;
+  OCR4B = heaterB.Pulse_Delay;
+  OCR4C = heaterC.Pulse_Delay;  
+
   currentMillis = millis();
   if(currentMillis - previousMillis >= readtempDelay){
     previousMillis += readtempDelay;
@@ -142,13 +150,7 @@ void loop() {
     heaterB.Temp = thermoB.readCelsius();
     heaterC.Temp = thermoC.readCelsius();
     
-    PID_heaterA.Compute();
-    PID_heaterB.Compute();
-    PID_heaterC.Compute();
-
-    OCR4A = heaterA.Pulse_Delay;
-    OCR4B = heaterB.Pulse_Delay;
-    OCR4C = heaterC.Pulse_Delay;
+    //PID compute here or in the loop
 
     lcd.clear();
     
