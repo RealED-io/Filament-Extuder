@@ -45,8 +45,8 @@ MAX6675 thermoC(SPI_clock, SPI_thermoC, SPI_MISO);
 
 //function declarations
 void reset_timer();
-// void PID_compute_routine();
 
+//*************** add void PID_compute_routine();
 
 
 void setup() {
@@ -124,8 +124,12 @@ void loop() {
   currentMillis = millis();
   if(currentMillis - previousMillis >= readtempDelay){
     previousMillis += readtempDelay;
-    
+
     //*************insert PID compute loop here
+    
+
+  }
+    
     
 
 
