@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <PID_v1.h>
 #include <max6675.h>
+#include <LiquidCrystal_I2C.h>
 #include "ACHeater.h"
 
 // //for testing
@@ -126,7 +127,7 @@ void loop() {
     previousMillis += readtempDelay;
 
     //*************insert PID compute loop here
-    
+
 
   }
     
