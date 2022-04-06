@@ -3,6 +3,7 @@
 #include <max6675.h>
 #include <LiquidCrystal_I2C.h>
 #include "ACHeater.h"
+//************************ add ArduinoLog
 
 // //for testing
 // const unsigned int MAX_MESSAGE_LENGTH = 6;
@@ -26,11 +27,11 @@ unsigned long previousMillis = 0;
 
 //classes init
 ACHeater heaterA(0,0,0,           //temp, pulse delay, set
-                  1,1,1);         //kP, kI, kD
+                  100,1,1);         //kP, kI, kD
 ACHeater heaterB(0,0,0,           //temp, pulse delay, set
-                  1,1,1);         //kP, kI, kD
+                  100,1,1);         //kP, kI, kD
 ACHeater heaterC(0,0,0,           //temp, pulse delay, set
-                  1,1,1);         //kP, kI, kD //***********************************add thermocouple pins to the class
+                  100,1,1);         //kP, kI, kD //***********************************add thermocouple pins to the class
 
 PID PID_heaterA(&heaterA.Temp, &heaterA.Pulse_Delay, &heaterA.Set_Temp,
                 heaterA.kP, heaterA.kI, heaterA.kD, REVERSE);
@@ -85,6 +86,11 @@ void setup() {
   //lcd initialization
   lcd.init();
   lcd.backlight();
+
+  //PID settings
+  PID_heaterA.SetOutputLimits(1, pulse_delay_max);
+  PID_heaterB.SetOutputLimits(1, pulse_delay_max);
+  PID_heaterC.SetOutputLimits(1, pulse_delay_max);
 
   sei();  //continue interrupts
 }
