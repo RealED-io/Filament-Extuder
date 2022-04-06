@@ -132,7 +132,6 @@ void loop() {
   if(currentMillis - previousMillis >= readtempDelay){
     previousMillis += readtempDelay;
 
-
     heaterA.Temp = thermoA.readCelsius();
     heaterB.Temp = thermoB.readCelsius();
     heaterC.Temp = thermoC.readCelsius();
