@@ -11,6 +11,9 @@
 const int zero_cross_pin = 3;    //zero cross pin for hardware interrupt
 const int SPI_clock = 52;
 const int SPI_MISO = 50;
+const int SPI_thermoA = 10;
+const int SPI_thermoB = 11;
+const int SPI_thermoC = 12;
 
 
 //constants
@@ -35,7 +38,9 @@ PID PID_heaterB(&heaterB.Temp, &heaterB.Pulse_Delay, &heaterB.Set_Temp,
 PID PID_heaterC(&heaterC.Temp, &heaterC.Pulse_Delay, &heaterC.Set_Temp,
                 heaterC.kP, heaterC.kI, heaterC.kD, REVERSE);
 
-MAX6675 thermoA();
+MAX6675 thermoA(SPI_clock, SPI_thermoA, SPI_MISO);
+MAX6675 thermoB(SPI_clock, SPI_thermoB, SPI_MISO);
+MAX6675 thermoC(SPI_clock, SPI_thermoC, SPI_MISO);
 
 
 //function declarations
