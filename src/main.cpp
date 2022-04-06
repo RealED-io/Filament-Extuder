@@ -3,7 +3,7 @@
 #include <max6675.h>
 #include <LiquidCrystal_I2C.h>
 #include "ACHeater.h"
-//************************ add ArduinoLog
+//************************ add ArduinoLog and remove PID library
 
 // //for testing
 // const unsigned int MAX_MESSAGE_LENGTH = 6;
