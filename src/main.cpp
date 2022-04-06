@@ -43,6 +43,8 @@ MAX6675 thermoA(SPI_clock, SPI_thermoA, SPI_MISO);
 MAX6675 thermoB(SPI_clock, SPI_thermoB, SPI_MISO);
 MAX6675 thermoC(SPI_clock, SPI_thermoC, SPI_MISO);
 
+LiquidCrystal_I2C lcd(0x27,20,4);
+
 
 //function declarations
 void reset_timer();
@@ -79,6 +81,10 @@ void setup() {
   OCR5A = pulse_delay_max;
   
   attachInterrupt(zero_cross_pin, reset_timer, RISING);
+
+  //lcd initialization
+  lcd.init();
+  lcd.backlight();
 
   sei();  //continue interrupts
 }
@@ -126,9 +132,40 @@ void loop() {
   if(currentMillis - previousMillis >= readtempDelay){
     previousMillis += readtempDelay;
 
-    //*************insert PID compute loop here
 
+    heaterA.Temp = thermoA.readCelsius();
+    heaterB.Temp = thermoB.readCelsius();
+    heaterC.Temp = thermoC.readCelsius();
+    
+    PID_heaterA.Compute();
+    PID_heaterB.Compute();
+    PID_heaterC.Compute();
 
+    OCR4A = heaterA.Pulse_Delay;
+    OCR4B = heaterB.Pulse_Delay;
+    OCR4C = heaterC.Pulse_Delay;
+
+    lcd.clear();
+    
+    lcd.setCursor(0,0);
+    lcd.print("Set: ");
+    lcd.setCursor(10,0);
+    lcd.print("Real: ");
+
+    lcd.setCursor(0,1);
+    lcd.print(heaterA.Set_Temp);
+    lcd.setCursor(10,1);
+    lcd.print(heaterA.Temp);
+
+    lcd.setCursor(0,2);
+    lcd.print(heaterB.Set_Temp);
+    lcd.setCursor(10,2);
+    lcd.print(heaterB.Temp);
+    
+    lcd.setCursor(0,3);
+    lcd.print(heaterC.Set_Temp);
+    lcd.setCursor(10,3);
+    lcd.print(heaterC.Temp);
   }
     
     
