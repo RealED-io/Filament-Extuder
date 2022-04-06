@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <string.h>
+// #include <string.h>
 #include <PID_v1.h>
 #include <max6675.h>
 
