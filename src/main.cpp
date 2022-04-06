@@ -1,18 +1,19 @@
 #include <Arduino.h>
-// #include <string.h>
 #include <PID_v1.h>
 #include <max6675.h>
-
 #include "ACHeater.h"
 
 // //for testing
 // const unsigned int MAX_MESSAGE_LENGTH = 6;
 // unsigned int number = 0;
 
+//pin declarations
+const int zero_cross_pin = 3;    //zero cross pin for hardware interrupt
+const int SPI_clock = 52;
+const int SPI_MISO = 50;
 
 
 //constants
-const int zero_cross_pin = 18;    //zero cross pin for hardware interrupt
 const int pulse_delay_max = 16600;
 bool zero_cross = false;
 const int readtempDelay = 500;
@@ -34,7 +35,7 @@ PID PID_heaterB(&heaterB.Temp, &heaterB.Pulse_Delay, &heaterB.Set_Temp,
 PID PID_heaterC(&heaterC.Temp, &heaterC.Pulse_Delay, &heaterC.Set_Temp,
                 heaterC.kP, heaterC.kI, heaterC.kD, REVERSE);
 
-
+MAX6675 thermoA();
 
 
 //function declarations
