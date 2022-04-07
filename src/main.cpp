@@ -26,11 +26,11 @@ unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
 
 //classes init
-ACHeater heaterA(0,0,0,           //temp, pulse delay, set
+ACHeater heaterA(0,0,69,           //temp, pulse delay, set
                   100,1,1);         //kP, kI, kD
-ACHeater heaterB(0,0,0,           //temp, pulse delay, set
+ACHeater heaterB(0,0,69,           //temp, pulse delay, set
                   100,1,1);         //kP, kI, kD
-ACHeater heaterC(0,0,0,           //temp, pulse delay, set
+ACHeater heaterC(0,0,69,           //temp, pulse delay, set
                   100,1,1);         //kP, kI, kD //***********************************add thermocouple pins to the class
 
 PID PID_heaterA(&heaterA.Temp, &heaterA.Pulse_Delay, &heaterA.Set_Temp,
