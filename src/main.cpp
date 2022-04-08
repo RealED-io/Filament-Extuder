@@ -55,8 +55,8 @@ void reset_timer();
 
 void setup() {
   // Serial.begin(9600);   //for testing
+  
   cli(); //stops interrupts
-
 
   //sets PA0 to PA2 (pin 22-24) as output
   DDRA |= B00000111;
@@ -80,7 +80,9 @@ void setup() {
 
   //firing delays falling edge
   OCR5A = pulse_delay_max;
-  
+
+  sei();  //continue interrupts
+
   attachInterrupt(zero_cross_pin, reset_timer, RISING);
 
   //lcd initialization
@@ -92,7 +94,7 @@ void setup() {
   PID_heaterB.SetOutputLimits(1, pulse_delay_max);
   PID_heaterC.SetOutputLimits(1, pulse_delay_max);
 
-  sei();  //continue interrupts
+
 }
 
 void reset_timer(){
