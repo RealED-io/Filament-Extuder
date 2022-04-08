@@ -35,11 +35,11 @@ unsigned long previousMillis = 0;
 
 //classes init
 ACHeater heaterA(0,16600,50,           //temp, pulse delay, set
-                  2,2,2);         //kP, kI, kD
-ACHeater heaterB(0,16600,0,           //temp, pulse delay, set
-                  2,2,2);         //kP, kI, kD
-ACHeater heaterC(0,1660,-100,           //temp, pulse delay, set
-                  2,2,2);         //kP, kI, kD //***********************************add thermocouple pins to the class
+                  100,20,20);         //kP, kI, kD
+ACHeater heaterB(0,16600,50,           //temp, pulse delay, set
+                  100,20,20);         //kP, kI, kD
+ACHeater heaterC(0,16600,50,           //temp, pulse delay, set
+                  100,20,20);         //kP, kI, kD //***********************************add thermocouple pins to the class
 
 double ATime = 0, BTime = 0, CTime = 0;
 double Aerror_previous = 0, Berror_previous = 0, Cerror_previous = 0;
@@ -83,7 +83,7 @@ void setup() {
   TCCR5A = 0;
   TCCR5B = 0;
   TCCR5B |= B00000010;  //set prescaler to 8
-  TIMSK5 |= B00000010;  //enable compare match 5A for timer reset
+  TIMSK5 |= B00000010;  //enable compare match 5A for timer reset 
 
   //firing delays rising edge
   OCR4A = 0;
@@ -157,6 +157,7 @@ void PID_compute(double kP, double kI, double kD, double Temp, double Set_Temp, 
   PID_value = PID_P + PID_I + PID_D;
 
   
+  PID_value = 16601 - PID_value;
   
   if(PID_value < 1){
     PID_value = 1;
@@ -201,6 +202,7 @@ ISR(TIMER4_COMPB_vect){
 ISR(TIMER4_COMPC_vect){
   if(zero_cross){
     PORTA |= B00000100;
+    
   }
 }
 
@@ -208,6 +210,7 @@ ISR(TIMER4_COMPC_vect){
 ISR(TIMER5_COMPA_vect){
   PORTA &= !B00000111; 
   zero_cross = false;
+
 
   // //for testing
   // reset_timer();
