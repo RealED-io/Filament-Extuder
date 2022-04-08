@@ -35,14 +35,15 @@ unsigned long previousMillis = 0;
 
 //classes init
 ACHeater heaterA(0,16600,50,           //temp, pulse delay, set
-                  100,100,100);         //kP, kI, kD
+                  2,2,2);         //kP, kI, kD
 ACHeater heaterB(0,16600,0,           //temp, pulse delay, set
-                  100,100,100);         //kP, kI, kD
+                  2,2,2);         //kP, kI, kD
 ACHeater heaterC(0,1660,-100,           //temp, pulse delay, set
-                  100,100,100);         //kP, kI, kD //***********************************add thermocouple pins to the class
+                  2,2,2);         //kP, kI, kD //***********************************add thermocouple pins to the class
 
 double ATime = 0, BTime = 0, CTime = 0;
 double Aerror_previous = 0, Berror_previous = 0, Cerror_previous = 0;
+double APID_I, BPID_I, CPID_I;
 
 // PID PID_heaterA(&heaterA.Temp, &heaterA.Pulse_Delay, &heaterA.Set_Temp,
 //                 heaterA.kP, heaterA.kI, heaterA.kD, REVERSE);
@@ -127,18 +128,21 @@ void PID_compute(double kP, double kI, double kD, double Temp, double Set_Temp, 
   }
 
   PID_P = kP * error;
-  PID_I = PID_I + (kI * error);
 
   if(heaternumber == 1){
     Time = ATime;
     error_previous = Aerror_previous;
+    PID_I = APID_I;
   }else if (heaternumber == 2){
     Time = BTime;
     error_previous = Berror_previous;
+    PID_I = BPID_I;
   }else if (heaternumber == 3){
     Time = CTime;
     error_previous = Cerror_previous;
+    PID_I = CPID_I;
   }
+  PID_I = PID_I + (kI * error);
 
   Time_previous = Time;
   Time = millis();
@@ -165,14 +169,17 @@ void PID_compute(double kP, double kI, double kD, double Temp, double Set_Temp, 
     ATime = Time;
     Aerror_previous = error;
     heaterA.Pulse_Delay = int(PID_value);
+    APID_I = PID_I;
   }else if (heaternumber == 2){
     BTime = Time;
     Berror_previous = error;
     heaterB.Pulse_Delay = int(PID_value);
+    BPID_I = PID_I;
   }else if (heaternumber == 3){
     CTime = Time;
     Cerror_previous = error;
     heaterC.Pulse_Delay = int(PID_value);
+    CPID_I = PID_I;
   }
 }
 
