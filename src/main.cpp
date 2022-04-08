@@ -3,6 +3,13 @@
 #include <max6675.h>
 #include <LiquidCrystal_I2C.h>
 #include "ACHeater.h"
+
+#if true
+  #define Debug Serial
+#else
+  #define Debug
+#endif
+
 //************************ add ArduinoLog and remove PID library
 
 // //for testing
@@ -26,19 +33,19 @@ unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
 
 //classes init
-ACHeater heaterA(0,0,69,           //temp, pulse delay, set
+ACHeater heaterA(0,100,69,           //temp, pulse delay, set
                   100,1,1);         //kP, kI, kD
 ACHeater heaterB(0,0,69,           //temp, pulse delay, set
                   100,1,1);         //kP, kI, kD
 ACHeater heaterC(0,0,69,           //temp, pulse delay, set
                   100,1,1);         //kP, kI, kD //***********************************add thermocouple pins to the class
 
-PID PID_heaterA(&heaterA.Temp, &heaterA.Pulse_Delay, &heaterA.Set_Temp,
-                heaterA.kP, heaterA.kI, heaterA.kD, REVERSE);
-PID PID_heaterB(&heaterB.Temp, &heaterB.Pulse_Delay, &heaterB.Set_Temp,
-                heaterB.kP, heaterB.kI, heaterB.kD, REVERSE);
-PID PID_heaterC(&heaterC.Temp, &heaterC.Pulse_Delay, &heaterC.Set_Temp,
-                heaterC.kP, heaterC.kI, heaterC.kD, REVERSE);
+// PID PID_heaterA(&heaterA.Temp, &heaterA.Pulse_Delay, &heaterA.Set_Temp,
+//                 heaterA.kP, heaterA.kI, heaterA.kD, REVERSE);
+// PID PID_heaterB(&heaterB.Temp, &heaterB.Pulse_Delay, &heaterB.Set_Temp,
+//                 heaterB.kP, heaterB.kI, heaterB.kD, REVERSE);
+// PID PID_heaterC(&heaterC.Temp, &heaterC.Pulse_Delay, &heaterC.Set_Temp,
+//                 heaterC.kP, heaterC.kI, heaterC.kD, REVERSE);
 
 MAX6675 thermoA(SPI_clock, SPI_thermoA, SPI_MISO);
 MAX6675 thermoB(SPI_clock, SPI_thermoB, SPI_MISO);
@@ -50,11 +57,12 @@ LiquidCrystal_I2C lcd(0x3F,20,4);
 //function declarations
 void reset_timer();
 
+unsigned int compute();
 //*************** add void PID_compute_routine();
 
 
 void setup() {
-  // Serial.begin(9600);   //for testing
+  Debug.begin(9600);   //for testing
   
   cli(); //stops interrupts
 
@@ -90,9 +98,9 @@ void setup() {
   lcd.backlight();
 
   //PID settings
-  PID_heaterA.SetOutputLimits(1, pulse_delay_max);
-  PID_heaterB.SetOutputLimits(1, pulse_delay_max);
-  PID_heaterC.SetOutputLimits(1, pulse_delay_max);
+  // PID_heaterA.SetOutputLimits(1, pulse_delay_max);
+  // PID_heaterB.SetOutputLimits(1, pulse_delay_max);
+  // PID_heaterC.SetOutputLimits(1, pulse_delay_max);
 
 
 }
@@ -136,13 +144,15 @@ ISR(TIMER5_COMPA_vect){
 
 
 void loop() {
-  PID_heaterA.Compute();
-  PID_heaterB.Compute();
-  PID_heaterC.Compute();
+  // PID_heaterA.Compute();
+  // PID_heaterB.Compute();
+  // PID_heaterC.Compute();
 
   OCR4A = heaterA.Pulse_Delay;
   OCR4B = heaterB.Pulse_Delay;
-  OCR4C = heaterC.Pulse_Delay;  
+  OCR4C = heaterC.Pulse_Delay;
+
+  Debug.println(OCR4A);
 
   currentMillis = millis();
   if(currentMillis - previousMillis >= readtempDelay){
@@ -182,14 +192,14 @@ void loop() {
 
 
   //for testing
-//   if (Serial.available() > 0)
+//   if (Debug.available() > 0)
 //  {
 //     //Create a place to hold the incoming message
 //     static char message[MAX_MESSAGE_LENGTH];
 //     static unsigned int message_pos = 0;
 
-//     //Read the next available byte in the serial receive buffer
-//     char inByte = Serial.read();
+//     //Read the next available byte in the Debug receive buffer
+//     char inByte = Debug.read();
 
 //     //Message coming in (check not terminating character) and guard for over message size
 //     if ( inByte != '\n' && (message_pos < MAX_MESSAGE_LENGTH - 1) )
@@ -205,24 +215,24 @@ void loop() {
 //       //Add null character to string
 //       message[message_pos] = '\0';
 
-//       Serial.println(message);
+//       Debug.println(message);
       
 //       if(message[0] == 'a'){
-//         Serial.println("case a");
+//         Debug.println("case a");
 //         OCR4A = number;
 
 //       }else if (message[0] == 'b')
 //       {
-//         Serial.println("case b");
+//         Debug.println("case b");
 //         OCR4B = number;
 //       }else if (message[0] == 'c')
 //       {
-//         Serial.println("case c");
+//         Debug.println("case c");
 //         OCR4C = number;
 //       }else
 //       {
 //         number = atoi(message);
-//         Serial.println(number);
+//         Debug.println(number);
 //       }
       
 
