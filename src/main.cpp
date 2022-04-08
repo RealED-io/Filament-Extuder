@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <Wire.h>
 #include <PID_v1.h>
 #include <max6675.h>
 #include <LiquidCrystal_I2C.h>
@@ -33,12 +34,15 @@ unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
 
 //classes init
-ACHeater heaterA(0,100,69,           //temp, pulse delay, set
-                  100,1,1);         //kP, kI, kD
-ACHeater heaterB(0,0,69,           //temp, pulse delay, set
-                  100,1,1);         //kP, kI, kD
-ACHeater heaterC(0,0,69,           //temp, pulse delay, set
-                  100,1,1);         //kP, kI, kD //***********************************add thermocouple pins to the class
+ACHeater heaterA(0,16600,50,           //temp, pulse delay, set
+                  100,100,100);         //kP, kI, kD
+ACHeater heaterB(0,16600,0,           //temp, pulse delay, set
+                  100,100,100);         //kP, kI, kD
+ACHeater heaterC(0,1660,-100,           //temp, pulse delay, set
+                  100,100,100);         //kP, kI, kD //***********************************add thermocouple pins to the class
+
+double ATime = 0, BTime = 0, CTime = 0;
+double Aerror_previous = 0, Berror_previous = 0, Cerror_previous = 0;
 
 // PID PID_heaterA(&heaterA.Temp, &heaterA.Pulse_Delay, &heaterA.Set_Temp,
 //                 heaterA.kP, heaterA.kI, heaterA.kD, REVERSE);
@@ -51,13 +55,12 @@ MAX6675 thermoA(SPI_clock, SPI_thermoA, SPI_MISO);
 MAX6675 thermoB(SPI_clock, SPI_thermoB, SPI_MISO);
 MAX6675 thermoC(SPI_clock, SPI_thermoC, SPI_MISO);
 
-LiquidCrystal_I2C lcd(0x3F,20,4);
+LiquidCrystal_I2C lcd(0x27,20,4);
 
 
 //function declarations
 void reset_timer();
-
-unsigned int compute();
+double PID_compute();
 //*************** add void PID_compute_routine();
 
 
@@ -111,6 +114,68 @@ void reset_timer(){
   TCNT5 = 0;
 }
 
+void PID_compute(double kP, double kI, double kD, double Temp, double Set_Temp, int heaternumber){
+  double PID_P, PID_I, PID_D, PID_value, error, error_previous;
+  double Time, Time_elapsed, Time_previous;
+  // Debug.println(kP);
+  // Debug.println(kI);
+  // Debug.println(kD);
+  error = Set_Temp - Temp;
+  // Debug.println(error);
+  if(error > 30){
+    PID_I = 0;
+  }
+
+  PID_P = kP * error;
+  PID_I = PID_I + (kI * error);
+
+  if(heaternumber == 1){
+    Time = ATime;
+    error_previous = Aerror_previous;
+  }else if (heaternumber == 2){
+    Time = BTime;
+    error_previous = Berror_previous;
+  }else if (heaternumber == 3){
+    Time = CTime;
+    error_previous = Cerror_previous;
+  }
+
+  Time_previous = Time;
+  Time = millis();
+
+  Time_elapsed = (Time - Time_previous) / 1000;
+
+  PID_D = kD * (error - error_previous) / Time_elapsed;
+
+  // Debug.println(PID_P);
+  // Debug.println(PID_I);
+  // Debug.println(PID_D);
+  PID_value = PID_P + PID_I + PID_D;
+
+  
+  
+  if(PID_value < 1){
+    PID_value = 1;
+  }
+  if(PID_value > 16600){
+    PID_value = 16600;
+  }
+
+  if(heaternumber == 1){
+    ATime = Time;
+    Aerror_previous = error;
+    heaterA.Pulse_Delay = int(PID_value);
+  }else if (heaternumber == 2){
+    BTime = Time;
+    Berror_previous = error;
+    heaterB.Pulse_Delay = int(PID_value);
+  }else if (heaternumber == 3){
+    CTime = Time;
+    Cerror_previous = error;
+    heaterC.Pulse_Delay = int(PID_value);
+  }
+}
+
 //turns on firing pulse for heater 1
 ISR(TIMER4_COMPA_vect){
   if(zero_cross){
@@ -148,11 +213,7 @@ void loop() {
   // PID_heaterB.Compute();
   // PID_heaterC.Compute();
 
-  OCR4A = heaterA.Pulse_Delay;
-  OCR4B = heaterB.Pulse_Delay;
-  OCR4C = heaterC.Pulse_Delay;
 
-  Debug.println(OCR4A);
 
   currentMillis = millis();
   if(currentMillis - previousMillis >= readtempDelay){
@@ -162,7 +223,21 @@ void loop() {
     heaterB.Temp = thermoB.readCelsius();
     heaterC.Temp = thermoC.readCelsius();
     
+    // Debug.println(heaterA.kP);
+    // Debug.println(heaterB.Temp);
+    // Debug.println(heaterC.Set_Temp);
+    PID_compute(heaterA.kP, heaterA.kI, heaterA.kD, heaterA.Temp, heaterA.Set_Temp, 1);
+    PID_compute(heaterB.kP, heaterB.kI, heaterB.kD, heaterB.Temp, heaterB.Set_Temp, 2);
+    PID_compute(heaterC.kP, heaterC.kI, heaterC.kD, heaterC.Temp, heaterC.Set_Temp, 3);
     //PID compute here or in the loop
+
+    OCR4A = heaterA.Pulse_Delay;
+    OCR4B = heaterB.Pulse_Delay;
+    OCR4C = heaterC.Pulse_Delay;
+
+    Debug.println(OCR4A);
+    Debug.println(OCR4B);
+    Debug.println(OCR4C);
 
     lcd.clear();
     
