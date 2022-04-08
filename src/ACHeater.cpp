@@ -8,9 +8,9 @@ ACHeater::ACHeater(double temp, double pulse_delay, double set_temp,
     Temp = temp;
     Pulse_Delay = pulse_delay;
     Set_Temp = set_temp;
-    constP = kP;
-    constI = kI;
-    constD = kD;
+    kP = constP;
+    kI = constI;
+    kD = constD;
  
 }
 
