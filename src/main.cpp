@@ -32,6 +32,7 @@ bool zero_cross = false;
 const int readtempDelay = 500;
 unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
+bool read_loop = false;
 
 //classes init
 //set_temp, kP, kI, kD, reversed direction
@@ -71,6 +72,14 @@ void setup() {
 
   //sets PA0 to PA2 (pin 22-24) as output
   DDRA |= B00000111;
+
+  // //sets timer 3
+  // TCCR3A = 0;
+  // TCCR3B = 0;
+  // TCCR3B |= B00000100;  //set prescaler to 256
+  // TIMSK3 |= B00000010;  //enable compare match 3A for timed readings (to remove millis() )
+
+  // OCR3A = 31250; //0.5 secs
 
   //sets timer 4
   TCCR4A = 0;
@@ -184,6 +193,11 @@ void reset_timer(){
 //   }
 // }
 
+//for timed temp readings (to remove millis() )
+// ISR(TIMER3_COMPA_vect){
+//   read_loop = true;
+// }
+
 //turns on firing pulse for heater 1
 ISR(TIMER4_COMPA_vect){
   if(zero_cross){
@@ -252,27 +266,29 @@ void loop() {
     Debug.println(OCR4B);
     Debug.println(OCR4C);
 
-    lcd.clear();
+    // lcd.clear();
     
-    lcd.setCursor(0,0);
-    lcd.print("Set: ");
-    lcd.setCursor(10,0);
-    lcd.print("Real: ");
+    // lcd.setCursor(0,0);
+    // lcd.print("Set: ");
+    // lcd.setCursor(10,0);
+    // lcd.print("Real: ");
 
-    lcd.setCursor(0,1);
-    lcd.print(heaterA.Set_Temp);
-    lcd.setCursor(10,1);
-    lcd.print(heaterA.Temp);
+    // lcd.setCursor(0,1);
+    // lcd.print(heaterA.Set_Temp);
+    // lcd.setCursor(10,1);
+    // lcd.print(heaterA.Temp);
 
-    lcd.setCursor(0,2);
-    lcd.print(heaterB.Set_Temp);
-    lcd.setCursor(10,2);
-    lcd.print(heaterB.Temp);
+    // lcd.setCursor(0,2);
+    // lcd.print(heaterB.Set_Temp);
+    // lcd.setCursor(10,2);
+    // lcd.print(heaterB.Temp);
     
-    lcd.setCursor(0,3);
-    lcd.print(heaterC.Set_Temp);
-    lcd.setCursor(10,3);
-    lcd.print(heaterC.Temp);
+    // lcd.setCursor(0,3);
+    // lcd.print(heaterC.Set_Temp);
+    // lcd.setCursor(10,3);
+    // lcd.print(heaterC.Temp);
+
+    // read_loop = false;
   }
     
     
