@@ -34,16 +34,15 @@ unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
 
 //classes init
-ACHeater heaterA(0,16600,50,           //temp, pulse delay, set
-                  100,20,20);         //kP, kI, kD
-ACHeater heaterB(0,16600,50,           //temp, pulse delay, set
-                  100,20,20);         //kP, kI, kD
-ACHeater heaterC(0,16600,50,           //temp, pulse delay, set
-                  100,20,20);         //kP, kI, kD //***********************************add thermocouple pins to the class
+//set_temp, kP, kI, kD, reversed direction
+ACHeater heaterA(50, 10, 20, 20, true);    
+ACHeater heaterB(50, 10, 20, 20, true);           
+ACHeater heaterC(50, 10, 20, 20, true);         
+                           //***********************************add thermocouple pins to the class
 
-double ATime = 0, BTime = 0, CTime = 0;
-double Aerror_previous = 0, Berror_previous = 0, Cerror_previous = 0;
-double APID_I, BPID_I, CPID_I;
+// double ATime = 0, BTime = 0, CTime = 0;
+// double Aerror_previous = 0, Berror_previous = 0, Cerror_previous = 0;
+// double APID_I, BPID_I, CPID_I;
 
 // PID PID_heaterA(&heaterA.Temp, &heaterA.Pulse_Delay, &heaterA.Set_Temp,
 //                 heaterA.kP, heaterA.kI, heaterA.kD, REVERSE);
@@ -61,7 +60,7 @@ LiquidCrystal_I2C lcd(0x27,20,4);
 
 //function declarations
 void reset_timer();
-double PID_compute();
+// double PID_compute();
 //*************** add void PID_compute_routine();
 
 
@@ -100,13 +99,14 @@ void setup() {
   //lcd initialization
   lcd.init();
   lcd.backlight();
-
+  
   //PID settings
   // PID_heaterA.SetOutputLimits(1, pulse_delay_max);
   // PID_heaterB.SetOutputLimits(1, pulse_delay_max);
   // PID_heaterC.SetOutputLimits(1, pulse_delay_max);
-
-
+  heaterA.Range(1,pulse_delay_max);
+  heaterB.Range(1,pulse_delay_max);
+  heaterC.Range(1,pulse_delay_max);
 }
 
 void reset_timer(){
@@ -115,74 +115,74 @@ void reset_timer(){
   TCNT5 = 0;
 }
 
-void PID_compute(double kP, double kI, double kD, double Temp, double Set_Temp, int heaternumber){
-  double PID_P, PID_I, PID_D, PID_value, error, error_previous;
-  double Time, Time_elapsed, Time_previous;
-  // Debug.println(kP);
-  // Debug.println(kI);
-  // Debug.println(kD);
-  error = Set_Temp - Temp;
-  // Debug.println(error);
-  if(error > 30){
-    PID_I = 0;
-  }
+// void PID_compute(double kP, double kI, double kD, double Temp, double Set_Temp, int heaternumber){
+//   double PID_P, PID_I, PID_D, PID_value, error, error_previous;
+//   double Time, Time_elapsed, Time_previous;
+//   // Debug.println(kP);
+//   // Debug.println(kI);
+//   // Debug.println(kD);
+//   error = Set_Temp - Temp;
+//   // Debug.println(error);
+//   if(error > 30){
+//     PID_I = 0;
+//   }
 
-  PID_P = kP * error;
+//   PID_P = kP * error;
 
-  if(heaternumber == 1){
-    Time = ATime;
-    error_previous = Aerror_previous;
-    PID_I = APID_I;
-  }else if (heaternumber == 2){
-    Time = BTime;
-    error_previous = Berror_previous;
-    PID_I = BPID_I;
-  }else if (heaternumber == 3){
-    Time = CTime;
-    error_previous = Cerror_previous;
-    PID_I = CPID_I;
-  }
-  PID_I = PID_I + (kI * error);
+//   if(heaternumber == 1){
+//     Time = ATime;
+//     error_previous = Aerror_previous;
+//     PID_I = APID_I;
+//   }else if (heaternumber == 2){
+//     Time = BTime;
+//     error_previous = Berror_previous;
+//     PID_I = BPID_I;
+//   }else if (heaternumber == 3){
+//     Time = CTime;
+//     error_previous = Cerror_previous;
+//     PID_I = CPID_I;
+//   }
+//   PID_I = PID_I + (kI * error);
 
-  Time_previous = Time;
-  Time = millis();
+//   Time_previous = Time;
+//   Time = millis();
 
-  Time_elapsed = (Time - Time_previous) / 1000;
+//   Time_elapsed = (Time - Time_previous) / 1000;
 
-  PID_D = kD * (error - error_previous) / Time_elapsed;
+//   PID_D = kD * (error - error_previous) / Time_elapsed;
 
-  // Debug.println(PID_P);
-  // Debug.println(PID_I);
-  // Debug.println(PID_D);
-  PID_value = PID_P + PID_I + PID_D;
+//   // Debug.println(PID_P);
+//   // Debug.println(PID_I);
+//   // Debug.println(PID_D);
+//   PID_value = PID_P + PID_I + PID_D;
 
   
-  PID_value = 16601 - PID_value;
+//   PID_value = 16601 - PID_value;
   
-  if(PID_value < 1){
-    PID_value = 1;
-  }
-  if(PID_value > 16600){
-    PID_value = 16600;
-  }
+//   if(PID_value < 1){
+//     PID_value = 1;
+//   }
+//   if(PID_value > 16600){
+//     PID_value = 16600;
+//   }
 
-  if(heaternumber == 1){
-    ATime = Time;
-    Aerror_previous = error;
-    heaterA.Pulse_Delay = int(PID_value);
-    APID_I = PID_I;
-  }else if (heaternumber == 2){
-    BTime = Time;
-    Berror_previous = error;
-    heaterB.Pulse_Delay = int(PID_value);
-    BPID_I = PID_I;
-  }else if (heaternumber == 3){
-    CTime = Time;
-    Cerror_previous = error;
-    heaterC.Pulse_Delay = int(PID_value);
-    CPID_I = PID_I;
-  }
-}
+//   if(heaternumber == 1){
+//     ATime = Time;
+//     Aerror_previous = error;
+//     heaterA.Pulse_Delay = int(PID_value);
+//     APID_I = PID_I;
+//   }else if (heaternumber == 2){
+//     BTime = Time;
+//     Berror_previous = error;
+//     heaterB.Pulse_Delay = int(PID_value);
+//     BPID_I = PID_I;
+//   }else if (heaternumber == 3){
+//     CTime = Time;
+//     Cerror_previous = error;
+//     heaterC.Pulse_Delay = int(PID_value);
+//     CPID_I = PID_I;
+//   }
+// }
 
 //turns on firing pulse for heater 1
 ISR(TIMER4_COMPA_vect){
@@ -211,9 +211,8 @@ ISR(TIMER5_COMPA_vect){
   PORTA &= !B00000111; 
   zero_cross = false;
 
-
-  // //for testing
-  // reset_timer();
+  //for testing
+  reset_timer();
 }
 
 
@@ -236,16 +235,20 @@ void loop() {
     // Debug.println(heaterA.kP);
     // Debug.println(heaterB.Temp);
     // Debug.println(heaterC.Set_Temp);
-    PID_compute(heaterA.kP, heaterA.kI, heaterA.kD, heaterA.Temp, heaterA.Set_Temp, 1);
-    PID_compute(heaterB.kP, heaterB.kI, heaterB.kD, heaterB.Temp, heaterB.Set_Temp, 2);
-    PID_compute(heaterC.kP, heaterC.kI, heaterC.kD, heaterC.Temp, heaterC.Set_Temp, 3);
+    // PID_compute(heaterA.kP, heaterA.kI, heaterA.kD, heaterA.Temp, heaterA.Set_Temp, 1);
+    // PID_compute(heaterB.kP, heaterB.kI, heaterB.kD, heaterB.Temp, heaterB.Set_Temp, 2);
+    // PID_compute(heaterC.kP, heaterC.kI, heaterC.kD, heaterC.Temp, heaterC.Set_Temp, 3);
     //PID compute here or in the loop
+
+    heaterA.Compute(readtempDelay);
+    heaterB.Compute(readtempDelay);
+    heaterC.Compute(readtempDelay);
 
     OCR4A = heaterA.Pulse_Delay;
     OCR4B = heaterB.Pulse_Delay;
     OCR4C = heaterC.Pulse_Delay;
 
-    Debug.println(OCR4A);
+    Debug.println(heaterA.Pulse_Delay);
     Debug.println(OCR4B);
     Debug.println(OCR4C);
 

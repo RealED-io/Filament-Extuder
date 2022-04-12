@@ -16,16 +16,16 @@ void ACHeater::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is 
     double Error, PID_value;
 
     Error = Set_Temp - Temp;
-    //disable Integral when Error is high
-    if(Error > 30)
-    {
-        PID_I = 0;
-    }
+    // //disable Integral when Error is high
+    // if(Error > 30)
+    // {
+    //     PID_I = 0;
+    // }
 
     //individually compute for P, I, and D
     PID_P = kP * Error;
     PID_I = PID_I + (kI * Error);
-    PID_D = kD * ( (Error - Error_Previous) / (Compute_Delay * 1000) );
+    PID_D = kD * ( (Error - Error_Previous) / (Compute_Delay) );
 
     //PID total
     PID_value = PID_P + PID_I + PID_D;
@@ -49,6 +49,13 @@ void ACHeater::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is 
     {
         Pulse_Delay = PID_value;
     }
+
+    // Serial.println(PID_P);
+    // Serial.println(PID_I);
+    // Serial.println(PID_D);
+    // Serial.println(PID_value);
+    // Serial.println(Pulse_Delay);
+    // Serial.println();
 
 }
 
