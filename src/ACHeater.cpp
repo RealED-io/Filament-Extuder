@@ -51,3 +51,9 @@ void ACHeater::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is 
     }
 
 }
+
+void ACHeater::Range(unsigned int min, unsigned int max)
+{
+    Delay_Min = min;
+    Delay_Max = max;
+}

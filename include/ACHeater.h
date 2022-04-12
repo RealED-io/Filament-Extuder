@@ -27,6 +27,7 @@ class ACHeater{
         unsigned int Delay_Max;
 
         void Compute(unsigned int);
+        void Range(unsigned int, unsigned int);
 };
 
 #endif
