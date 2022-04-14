@@ -35,7 +35,7 @@ const int SPI_thermoC = 12;
 //constants
 const int pulse_delay_max = 16600;
 bool zero_cross = false;
-const int readtempDelay = 500;
+const int Delay_readtemp = 500;
 unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
 bool read_loop = false;
@@ -245,8 +245,8 @@ void loop() {
 
 
   currentMillis = millis();
-  if(currentMillis - previousMillis >= readtempDelay){
-    previousMillis += readtempDelay;
+  if(currentMillis - previousMillis >= Delay_readtemp){
+    previousMillis += Delay_readtemp;
 
     heaterA.Temp = thermoA.readCelsius();
     heaterB.Temp = thermoB.readCelsius();
@@ -260,9 +260,9 @@ void loop() {
     // PID_compute(heaterC.kP, heaterC.kI, heaterC.kD, heaterC.Temp, heaterC.Set_Temp, 3);
     //PID compute here or in the loop
 
-    heaterA.Compute(readtempDelay);
-    heaterB.Compute(readtempDelay);
-    heaterC.Compute(readtempDelay);
+    heaterA.Compute(Delay_readtemp);
+    heaterB.Compute(Delay_readtemp);
+    heaterC.Compute(Delay_readtemp);
 
     OCR4A = heaterA.Pulse_Delay;
     OCR4B = heaterB.Pulse_Delay;
