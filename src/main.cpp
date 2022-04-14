@@ -5,10 +5,16 @@
 #include <LiquidCrystal_I2C.h>
 #include "ACHeater.h"
 
-#if true
-  #define Debug Serial
+#if false
+  #define Debugbegin(x) Serial.begin(x)
+  #define Debugprint(x) Serial.print(x)
+  #define Debugprintln(x) Serial.println(x)
+  #define Debugavailable(x) Serial.available(x)
 #else
-  #define Debug
+  #define Debugbegin(x)
+  #define Debugprint(x)
+  #define Debugprintln(x)
+  #define Debugavailable(x)
 #endif
 
 //************************ add ArduinoLog and remove PID library
@@ -66,7 +72,7 @@ void reset_timer();
 
 
 void setup() {
-  Debug.begin(9600);   //for testing
+  Debugbegin(9600);   //for testing
   
   cli(); //stops interrupts
 
@@ -127,11 +133,11 @@ void reset_timer(){
 // void PID_compute(double kP, double kI, double kD, double Temp, double Set_Temp, int heaternumber){
 //   double PID_P, PID_I, PID_D, PID_value, error, error_previous;
 //   double Time, Time_elapsed, Time_previous;
-//   // Debug.println(kP);
-//   // Debug.println(kI);
-//   // Debug.println(kD);
+//   // Debugprintln(kP);
+//   // Debugprintln(kI);
+//   // Debugprintln(kD);
 //   error = Set_Temp - Temp;
-//   // Debug.println(error);
+//   // Debugprintln(error);
 //   if(error > 30){
 //     PID_I = 0;
 //   }
@@ -160,9 +166,9 @@ void reset_timer(){
 
 //   PID_D = kD * (error - error_previous) / Time_elapsed;
 
-//   // Debug.println(PID_P);
-//   // Debug.println(PID_I);
-//   // Debug.println(PID_D);
+//   // Debugprintln(PID_P);
+//   // Debugprintln(PID_I);
+//   // Debugprintln(PID_D);
 //   PID_value = PID_P + PID_I + PID_D;
 
   
@@ -246,9 +252,9 @@ void loop() {
     heaterB.Temp = thermoB.readCelsius();
     heaterC.Temp = thermoC.readCelsius();
     
-    // Debug.println(heaterA.kP);
-    // Debug.println(heaterB.Temp);
-    // Debug.println(heaterC.Set_Temp);
+    // Debugprintln(heaterA.kP);
+    // Debugprintln(heaterB.Temp);
+    // Debugprintln(heaterC.Set_Temp);
     // PID_compute(heaterA.kP, heaterA.kI, heaterA.kD, heaterA.Temp, heaterA.Set_Temp, 1);
     // PID_compute(heaterB.kP, heaterB.kI, heaterB.kD, heaterB.Temp, heaterB.Set_Temp, 2);
     // PID_compute(heaterC.kP, heaterC.kI, heaterC.kD, heaterC.Temp, heaterC.Set_Temp, 3);
@@ -262,9 +268,9 @@ void loop() {
     OCR4B = heaterB.Pulse_Delay;
     OCR4C = heaterC.Pulse_Delay;
 
-    Debug.println(heaterA.Pulse_Delay);
-    Debug.println(OCR4B);
-    Debug.println(OCR4C);
+    Debugprintln(heaterA.Pulse_Delay);
+    Debugprintln(OCR4B);
+    Debugprintln(OCR4C);
 
     // lcd.clear();
     
@@ -296,7 +302,7 @@ void loop() {
 
 
   //for testing
-//   if (Debug.available() > 0)
+//   if (Debugavailable() > 0)
 //  {
 //     //Create a place to hold the incoming message
 //     static char message[MAX_MESSAGE_LENGTH];
@@ -319,24 +325,24 @@ void loop() {
 //       //Add null character to string
 //       message[message_pos] = '\0';
 
-//       Debug.println(message);
+//       Debugprintln(message);
       
 //       if(message[0] == 'a'){
-//         Debug.println("case a");
+//         Debugprintln("case a");
 //         OCR4A = number;
 
 //       }else if (message[0] == 'b')
 //       {
-//         Debug.println("case b");
+//         Debugprintln("case b");
 //         OCR4B = number;
 //       }else if (message[0] == 'c')
 //       {
-//         Debug.println("case c");
+//         Debugprintln("case c");
 //         OCR4C = number;
 //       }else
 //       {
 //         number = atoi(message);
-//         Debug.println(number);
+//         Debugprintln(number);
 //       }
       
 
