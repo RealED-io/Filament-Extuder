@@ -99,6 +99,7 @@ void setup() {
 }
 
 void reset_timer(){
+  PORTA &= !B00000111; 
   zero_cross = true;
   TCNT4 = 0;
   TCNT5 = 0;
@@ -110,20 +111,19 @@ ISR(TIMER4_COMPA_vect){
   if(zero_cross){
     PORTA |= B00000001;    
   }
-
 }
+
 //turns on firing pulse for heater 2
 ISR(TIMER4_COMPB_vect){
   if(zero_cross){
     PORTA |= B00000010;
   }
-
 }
+
 //turns on firing pulse for heater 3
 ISR(TIMER4_COMPC_vect){
   if(zero_cross){
     PORTA |= B00000100;
-    
   }
 }
 
@@ -132,8 +132,8 @@ ISR(TIMER5_COMPA_vect){
   PORTA &= !B00000111; 
   zero_cross = false;
 
-  //for testing
-  reset_timer();
+  // //for testing
+  // reset_timer();
 }
 
 
