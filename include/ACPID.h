@@ -1,17 +1,17 @@
-#ifndef ACHeater_h
-#define ACHeater_h
+#ifndef ACPID_h
+#define ACPID_h
 
 #include <Arduino.h>
 
 
-class ACHeater{
+class ACPID{
     public:
-        ACHeater(double, double, double, double, bool);
+        ACPID(double, double, double, double, bool);
 
         bool PID_Direction;     //true for reversed, false for direct
         double Temp;            //PID input
         double Pulse_Delay;     //PID output
-        double Set_Temp;        //PID setpoint  
+        double Set;             //PID setpoint  
         
         double kP;
         double kI;

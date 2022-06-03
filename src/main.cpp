@@ -2,7 +2,7 @@
 // #include <Wire.h>
 #include <max6675.h>
 #include <LiquidCrystal_I2C.h>
-#include "ACHeater.h"
+#include "ACPID.h"
 
 #if false
   #define Debugbegin(x) Serial.begin(x)
@@ -38,9 +38,9 @@ bool read_loop = false;
 
 //classes init
 //set_temp, kP, kI, kD, reversed direction
-ACHeater heaterA(50, 10, 20, 20, true);    
-ACHeater heaterB(50, 10, 20, 20, true);           
-ACHeater heaterC(50, 10, 20, 20, true);         
+ACPID heaterA(50, 10, 20, 20, true);    
+ACPID heaterB(50, 10, 20, 20, true);           
+ACPID heaterC(50, 10, 20, 20, true);         
 
 
 MAX6675 thermoA(SPI_clock, SPI_thermoA, SPI_MISO);

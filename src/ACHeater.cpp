@@ -1,21 +1,21 @@
 #include <Arduino.h>
-#include "ACHeater.h"
+#include "ACPID.h"
 
 
-ACHeater::ACHeater(double set_temp, double constP, double constI, double constD, bool direction)
+ACPID::ACPID(double set, double constP, double constI, double constD, bool direction)
 {
-    Set_Temp = set_temp;
+    Set = set;
     kP = constP;
     kI = constI;
     kD = constD;
     PID_Direction = direction;
 }
 
-void ACHeater::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in ms
+void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in ms
 {
     double Error, PID_value;
 
-    Error = Set_Temp - Temp;
+    Error = Set - Temp;
     // //disable Integral when Error is high
     // if(Error > 30)
     // {
@@ -59,7 +59,7 @@ void ACHeater::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is 
 
 }
 
-void ACHeater::Range(unsigned int min, unsigned int max)
+void ACPID::Range(unsigned int min, unsigned int max)
 {
     Delay_Min = min;
     Delay_Max = max;
