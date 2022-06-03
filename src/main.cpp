@@ -143,9 +143,9 @@ void loop() {
   if(currentMillis - previousMillis >= Delay_readtemp){
     previousMillis += Delay_readtemp;
 
-    heaterA.Temp = thermoA.readCelsius();
-    heaterB.Temp = thermoB.readCelsius();
-    heaterC.Temp = thermoC.readCelsius();
+    heaterA.Input = thermoA.readCelsius();    //store temp reading to ACPID.Input
+    heaterB.Input = thermoB.readCelsius();
+    heaterC.Input = thermoC.readCelsius();
     
     //PID compute here or in the loop
 
@@ -169,18 +169,18 @@ void loop() {
     // lcd.print("Real: ");
 
     // lcd.setCursor(0,1);
-    // lcd.print(heaterA.Set_Temp);
+    // lcd.print(heaterA.Set_Input);
     // lcd.setCursor(10,1);
-    // lcd.print(heaterA.Temp);
+    // lcd.print(heaterA.Input);
 
     // lcd.setCursor(0,2);
-    // lcd.print(heaterB.Set_Temp);
+    // lcd.print(heaterB.Set_Input);
     // lcd.setCursor(10,2);
-    // lcd.print(heaterB.Temp);
+    // lcd.print(heaterB.Input);
     
     // lcd.setCursor(0,3);
-    // lcd.print(heaterC.Set_Temp);
+    // lcd.print(heaterC.Set_Input);
     // lcd.setCursor(10,3);
-    // lcd.print(heaterC.Temp);
+    // lcd.print(heaterC.Input);
   }
 }
