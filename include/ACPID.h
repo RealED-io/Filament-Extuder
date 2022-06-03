@@ -9,9 +9,9 @@ class ACPID{
         ACPID(double, double, double, double, bool);
 
         bool PID_Direction;     //true for reversed, false for direct
-        double Temp;            //PID input
+        double Input;            //PID input
         double Pulse_Delay;     //PID output
-        double Set;             //PID setpoint  
+        double Setpoint;        //PID setpoint  
         
         double kP;
         double kI;

@@ -4,7 +4,7 @@
 
 ACPID::ACPID(double set, double constP, double constI, double constD, bool direction)
 {
-    Set = set;
+    Setpoint = set;
     kP = constP;
     kI = constI;
     kD = constD;
@@ -15,7 +15,7 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
 {
     double Error, PID_value;
 
-    Error = Set - Temp;
+    Error = Setpoint - Input;
     // //disable Integral when Error is high
     // if(Error > 30)
     // {
