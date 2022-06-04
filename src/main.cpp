@@ -1,5 +1,5 @@
 #include <Arduino.h>
-// #include <Wire.h>
+#include <Wire.h>
 #include <max6675.h>
 #include <LiquidCrystal_I2C.h>
 #include "ACPID.h"
@@ -21,9 +21,9 @@
 
 //pin declarations
 const int zero_cross_pin = 3;    //zero cross pin for hardware interrupt
-const int SPI_clock = 52;
+const int SPI_clock = 52;        //for thermocouples
 const int SPI_MISO = 50;
-const int SPI_thermoA = 10;
+const int SPI_thermoA = 10;      
 const int SPI_thermoB = 11;
 const int SPI_thermoC = 12;
 
@@ -36,12 +36,12 @@ unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
 bool read_loop = false;
 
+
 //classes init
 //set_temp, kP, kI, kD, reversed direction
 ACPID heaterA(50, 10, 20, 20, true);    
 ACPID heaterB(50, 10, 20, 20, true);           
 ACPID heaterC(50, 10, 20, 20, true);         
-
 
 MAX6675 thermoA(SPI_clock, SPI_thermoA, SPI_MISO);
 MAX6675 thermoB(SPI_clock, SPI_thermoB, SPI_MISO);
@@ -52,6 +52,7 @@ LiquidCrystal_I2C lcd(0x27,20,4);
 
 //function declarations
 void reset_timer();
+void heater_loop();
 
 //*************** add void PID_compute_routine();
 
@@ -105,6 +106,47 @@ void reset_timer(){
   TCNT5 = 0;
 }
 
+void heater_loop(){
+  previousMillis += Delay_readtemp;
+
+  heaterA.Input = thermoA.readCelsius();    //store temp reading to ACPID.Input
+  heaterB.Input = thermoB.readCelsius();
+  heaterC.Input = thermoC.readCelsius();
+
+  heaterA.Compute(Delay_readtemp);
+  heaterB.Compute(Delay_readtemp);
+  heaterC.Compute(Delay_readtemp);
+
+  OCR4A = heaterA.Pulse_Delay;
+  OCR4B = heaterB.Pulse_Delay;
+  OCR4C = heaterC.Pulse_Delay;
+
+  // Debugprintln(heaterA.Pulse_Delay);
+  // Debugprintln(OCR4B);
+  // Debugprintln(OCR4C);
+
+  // lcd.clear();
+  
+  // lcd.setCursor(0,0);
+  // lcd.print("Set: ");
+  // lcd.setCursor(10,0);
+  // lcd.print("Real: ");
+
+  // lcd.setCursor(0,1);
+  // lcd.print(heaterA.Setpoint);
+  // lcd.setCursor(10,1);
+  // lcd.print(heaterA.Input);
+
+  // lcd.setCursor(0,2);
+  // lcd.print(heaterB.Setpoint);
+  // lcd.setCursor(10,2);
+  // lcd.print(heaterB.Input);
+  
+  // lcd.setCursor(0,3);
+  // lcd.print(heaterC.Setpoint);
+  // lcd.setCursor(10,3);
+  // lcd.print(heaterC.Input);
+}
 
 //turns on firing pulse for heater 1
 ISR(TIMER4_COMPA_vect){
@@ -139,48 +181,23 @@ ISR(TIMER5_COMPA_vect){
 
 
 void loop() {
-  currentMillis = millis();
-  if(currentMillis - previousMillis >= Delay_readtemp){
-    previousMillis += Delay_readtemp;
 
-    heaterA.Input = thermoA.readCelsius();    //store temp reading to ACPID.Input
-    heaterB.Input = thermoB.readCelsius();
-    heaterC.Input = thermoC.readCelsius();
+//menu function
+  bool menu_screenupdate = true;
+  if(menu_screenupdate){
+    lcd.clear();
     
-    //PID compute here or in the loop
-
-    heaterA.Compute(Delay_readtemp);
-    heaterB.Compute(Delay_readtemp);
-    heaterC.Compute(Delay_readtemp);
-
-    OCR4A = heaterA.Pulse_Delay;
-    OCR4B = heaterB.Pulse_Delay;
-    OCR4C = heaterC.Pulse_Delay;
-
-    Debugprintln(heaterA.Pulse_Delay);
-    Debugprintln(OCR4B);
-    Debugprintln(OCR4C);
-
-    // lcd.clear();
-    
-    // lcd.setCursor(0,0);
-    // lcd.print("Set: ");
-    // lcd.setCursor(10,0);
-    // lcd.print("Real: ");
-
-    // lcd.setCursor(0,1);
-    // lcd.print(heaterA.Set_Input);
-    // lcd.setCursor(10,1);
-    // lcd.print(heaterA.Input);
-
-    // lcd.setCursor(0,2);
-    // lcd.print(heaterB.Set_Input);
-    // lcd.setCursor(10,2);
-    // lcd.print(heaterB.Input);
-    
-    // lcd.setCursor(0,3);
-    // lcd.print(heaterC.Set_Input);
-    // lcd.setCursor(10,3);
-    // lcd.print(heaterC.Input);
   }
+
+
+//end of menu function
+
+
+  // currentMillis = millis();
+  // if(currentMillis - previousMillis >= Delay_readtemp){
+  //   heater_loop();
+  // };
+  // if(currentMillis - previousMillis >= Delay_readtemp){
+
+  // }
 }
