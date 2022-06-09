@@ -48,7 +48,7 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
     //reversed direction for heater control
     if(PID_Direction)
     {
-        Pulse_Delay = (Delay_Max + 1) - PID_value;        
+        Pulse_Delay = (Delay_Max + Delay_Min) - PID_value;        
     }
     else
     {
@@ -60,8 +60,8 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
     // Serial.println(PID_P);
     // Serial.println(PID_I);
     // Serial.println(PID_D);
-    // Serial.println(PID_value);
-    // Serial.println(Pulse_Delay);
+    Serial.println(PID_value);
+    Serial.println(Pulse_Delay);
     // Serial.println();
 
 
