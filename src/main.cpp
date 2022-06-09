@@ -4,7 +4,7 @@
 #include <LiquidCrystal_I2C.h>
 #include "ACPID.h"
 
-#if false
+#if true
   #define Debugbegin(x) Serial.begin(x)
   #define Debugprint(x) Serial.print(x)
   #define Debugprintln(x) Serial.println(x)
@@ -26,6 +26,7 @@ const int SPI_MISO = 50;
 const int SPI_thermoA = 10;      
 const int SPI_thermoB = 11;
 const int SPI_thermoC = 12;
+// PULSE PIN 22, 23, 24
 
 
 //constants
@@ -39,9 +40,9 @@ bool read_loop = false;
 
 //classes init
 //set_temp, kP, kI, kD, reversed direction
-ACPID heaterA(50, 10, 20, 20, true);    
-ACPID heaterB(50, 10, 20, 20, true);           
-ACPID heaterC(50, 10, 20, 20, true);         
+ACPID heaterA(53, 1000, 1000, 1000, true);    
+ACPID heaterB(50, 10, 10, 10, true);           
+ACPID heaterC(50, 10, 10, 10, true);         
 
 MAX6675 thermoA(SPI_clock, SPI_thermoA, SPI_MISO);
 MAX6675 thermoB(SPI_clock, SPI_thermoB, SPI_MISO);
@@ -121,31 +122,31 @@ void heater_loop(){
   OCR4B = heaterB.Pulse_Delay;
   OCR4C = heaterC.Pulse_Delay;
 
-  // Debugprintln(heaterA.Pulse_Delay);
+  // Debugprintln(OCR4A);
   // Debugprintln(OCR4B);
-  // Debugprintln(OCR4C);
+  Debugprintln(OCR4C);
 
   // lcd.clear();
   
-  // lcd.setCursor(0,0);
-  // lcd.print("Set: ");
-  // lcd.setCursor(10,0);
-  // lcd.print("Real: ");
+  lcd.setCursor(0,0);
+  lcd.print("Set: ");
+  lcd.setCursor(10,0);
+  lcd.print("Real: ");
 
-  // lcd.setCursor(0,1);
-  // lcd.print(heaterA.Setpoint);
-  // lcd.setCursor(10,1);
-  // lcd.print(heaterA.Input);
+  lcd.setCursor(0,1);
+  lcd.print(heaterA.Setpoint);
+  lcd.setCursor(10,1);
+  lcd.print(heaterA.Input);
 
-  // lcd.setCursor(0,2);
-  // lcd.print(heaterB.Setpoint);
-  // lcd.setCursor(10,2);
-  // lcd.print(heaterB.Input);
+  lcd.setCursor(0,2);
+  lcd.print(heaterB.Setpoint);
+  lcd.setCursor(10,2);
+  lcd.print(heaterB.Input);
   
-  // lcd.setCursor(0,3);
-  // lcd.print(heaterC.Setpoint);
-  // lcd.setCursor(10,3);
-  // lcd.print(heaterC.Input);
+  lcd.setCursor(0,3);
+  lcd.print(heaterC.Setpoint);
+  lcd.setCursor(10,3);
+  lcd.print(heaterC.Input);
 }
 
 //turns on firing pulse for heater 1
@@ -182,22 +183,23 @@ ISR(TIMER5_COMPA_vect){
 
 void loop() {
 
-//menu function
-  bool menu_screenupdate = true;
-  if(menu_screenupdate){
-    lcd.clear();
+// //menu function
+//   bool menu_screenupdate = true;
+//   if(menu_screenupdate){
+//     lcd.clear();
     
-  }
-
-
+//   }
 //end of menu function
 
 
-  // currentMillis = millis();
-  // if(currentMillis - previousMillis >= Delay_readtemp){
-  //   heater_loop();
-  // };
-  // if(currentMillis - previousMillis >= Delay_readtemp){
+currentMillis = millis();
+if(currentMillis - previousMillis >= Delay_readtemp){
+  heater_loop();
+};
 
-  // }
+// if(currentMillis - previousMillis >= Delay_readtemp){
+  // if(zero_cross){
+  // Serial.println("A");    
+  // };
+// }
 }
