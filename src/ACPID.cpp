@@ -15,12 +15,17 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
 {
     double Error, PID_value;
 
-    Error = Setpoint - Input;
+    Error = (Setpoint - Input);
     // //disable Integral when Error is high
     // if(Error > 30)
     // {
     //     PID_I = 0;
     // }
+
+    //Reset PID_I after passing set
+    if((Error < 0) && (Error_Previous > 0)){
+        PID_I = 0;
+    };
 
     //individually compute for P, I, and D
     PID_P = kP * Error;
@@ -50,12 +55,15 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
         Pulse_Delay = PID_value;
     }
 
+    Error_Previous = Error;
+    
     // Serial.println(PID_P);
     // Serial.println(PID_I);
     // Serial.println(PID_D);
     // Serial.println(PID_value);
     // Serial.println(Pulse_Delay);
     // Serial.println();
+
 
 }
 
