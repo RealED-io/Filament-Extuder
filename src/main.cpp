@@ -89,16 +89,16 @@ void setup() {
 
   sei();  //continue interrupts
   pinMode(zero_cross_pin, INPUT_PULLUP);
-  attachInterrupt(zero_cross_pin, reset_timer, RISING);
+  attachInterrupt(digitalPinToInterrupt(zero_cross_pin), reset_timer, RISING);
 
   //lcd initialization
   lcd.init();
   lcd.backlight();
   
   //PID settings
-  heaterA.Range(600,16600);
-  heaterB.Range(600,16600);
-  heaterC.Range(600,16600);
+  heaterA.Range(600,16000);
+  heaterB.Range(600,16000);
+  heaterC.Range(600,16000);
 }
 
 void reset_timer(){
@@ -125,29 +125,29 @@ void heater_loop(){
 
   // Debugprintln(OCR4A);
   // Debugprintln(OCR4B);
-  Debugprintln(OCR4C);
+  // Debugprintln(OCR4C);
 
   // lcd.clear();
   
-  lcd.setCursor(0,0);
-  lcd.print("Set: ");
-  lcd.setCursor(10,0);
-  lcd.print("Real: ");
+  // lcd.setCursor(0,0);
+  // lcd.print("Set: ");
+  // lcd.setCursor(10,0);
+  // lcd.print("Real: ");
 
-  lcd.setCursor(0,1);
-  lcd.print(heaterA.Setpoint);
-  lcd.setCursor(10,1);
-  lcd.print(heaterA.Input);
+  // lcd.setCursor(0,1);
+  // lcd.print(heaterA.Setpoint);
+  // lcd.setCursor(10,1);
+  // lcd.print(heaterA.Input);
 
-  lcd.setCursor(0,2);
-  lcd.print(heaterB.Setpoint);
-  lcd.setCursor(10,2);
-  lcd.print(heaterB.Input);
+  // lcd.setCursor(0,2);
+  // lcd.print(heaterB.Setpoint);
+  // lcd.setCursor(10,2);
+  // lcd.print(heaterB.Input);
   
-  lcd.setCursor(0,3);
-  lcd.print(heaterC.Setpoint);
-  lcd.setCursor(10,3);
-  lcd.print(heaterC.Input);
+  // lcd.setCursor(0,3);
+  // lcd.print(heaterC.Setpoint);
+  // lcd.setCursor(10,3);
+  // lcd.print(heaterC.Input);
 }
 
 //turns on firing pulse for heater 1
