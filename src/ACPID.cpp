@@ -60,8 +60,8 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
     // Serial.println(PID_P);
     // Serial.println(PID_I);
     // Serial.println(PID_D);
-    Serial.println(PID_value);
-    Serial.println(Pulse_Delay);
+    // Serial.println(PID_value);
+    // Serial.println(Pulse_Delay);
     // Serial.println();
 
 

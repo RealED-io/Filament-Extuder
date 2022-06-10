@@ -40,7 +40,7 @@ bool read_loop = false;
 
 //classes init
 //set_temp, kP, kI, kD, reversed direction
-ACPID heaterA(53, 1000, 1000, 1000, true);    
+ACPID heaterA(53, 10, 10, 10, true);    
 ACPID heaterB(50, 10, 10, 10, true);           
 ACPID heaterC(50, 10, 10, 10, true);         
 
@@ -60,6 +60,7 @@ void heater_loop();
 
 void setup() {
   Debugbegin(9600);   //for testing
+  
   
   cli(); //stops interrupts
 
@@ -87,7 +88,7 @@ void setup() {
   OCR5A = pulse_delay_max;
 
   sei();  //continue interrupts
-
+  pinMode(zero_cross_pin, INPUT_PULLUP);
   attachInterrupt(zero_cross_pin, reset_timer, RISING);
 
   //lcd initialization
@@ -95,9 +96,9 @@ void setup() {
   lcd.backlight();
   
   //PID settings
-  heaterA.Range(1,pulse_delay_max);
-  heaterB.Range(1,pulse_delay_max);
-  heaterC.Range(1,pulse_delay_max);
+  heaterA.Range(600,16600);
+  heaterB.Range(600,16600);
+  heaterC.Range(600,16600);
 }
 
 void reset_timer(){
