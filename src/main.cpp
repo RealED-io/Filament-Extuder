@@ -117,9 +117,11 @@ void reset_timer(){
 void heater_loop(){
   previousMillis += Delay_readtemp;
 
+  noInterrupts();
   heaterA.Input = thermoA.readCelsius();    //store temp reading to ACPID.Input
   heaterB.Input = thermoB.readCelsius();
   heaterC.Input = thermoC.readCelsius();
+  interrupts();
 
   heaterA.Compute(Delay_readtemp);
   heaterB.Compute(Delay_readtemp);
