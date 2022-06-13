@@ -1,6 +1,16 @@
 #include <Arduino.h>
 #include "ACPID.h"
 
+#ifndef LOGGING
+  #define LOGGING 0
+  // 0 NONE
+  // 1 FATAL
+  // 2 ERROR
+  // 3 WARNING
+  // 4 INFO
+  // 5 DEBUG
+  // 6 TRACE
+#endif
 
 ACPID::ACPID(double set, double constP, double constI, double constD, bool direction)
 {
@@ -16,11 +26,12 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
     double Error, PID_value;
 
     Error = (Setpoint - Input);
-    // //disable Integral when Error is high
-    // if(Error > 30)
-    // {
-    //     PID_I = 0;
-    // }
+    
+    //disable Integral when Error is high
+    if(Error > PID_I_disableatError)
+    {
+        PID_I = 0;
+    }
 
     //Reset PID_I after passing set
     if((Error < 0) && (Error_Previous > 0)){
@@ -57,13 +68,14 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
 
     Error_Previous = Error;
     
-    // Serial.println(PID_P);
-    // Serial.println(PID_I);
-    // Serial.println(PID_D);
-    // Serial.println(PID_value);
-    // Serial.println(Pulse_Delay);
-    // Serial.println();
-
+    #if LOGGING >= 5
+        // Serial.println(PID_P);
+        // Serial.println(PID_I);
+        // Serial.println(PID_D);
+        // Serial.println(PID_value);
+        // Serial.println(Pulse_Delay);
+        // Serial.println();
+    #endif
 
 }
 
