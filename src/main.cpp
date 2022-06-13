@@ -4,17 +4,21 @@
 #include <LiquidCrystal_I2C.h>
 #include "ACPID.h"
 
-#if true
-  #define Debugbegin(x) Serial.begin(x)
-  #define Debugprint(x) Serial.print(x)
-  #define Debugprintln(x) Serial.println(x)
-  #define Debugavailable(x) Serial.available(x)
-#else
-  #define Debugbegin(x)
-  #define Debugprint(x)
-  #define Debugprintln(x)
-  #define Debugavailable(x)
+#ifndef LOGGING
+  #define LOGGING 0
+  // 0 NONE
+  // 1 FATAL
+  // 2 ERROR
+  // 3 WARNING
+  // 4 INFO
+  // 5 DEBUG
+  // 6 TRACE
 #endif
+
+#ifndef TEST
+  #define TEST true
+#endif
+
 
 //************************ add ArduinoLog and remove PID library
 
@@ -59,7 +63,9 @@ void heater_loop();
 
 
 void setup() {
-  Debugbegin(9600);   //for testing
+  #if LOGGING > 0
+  Serial.begin(9600);   //for testing
+  #endif
   
   
   cli(); //stops interrupts
@@ -123,11 +129,12 @@ void heater_loop(){
   OCR4B = heaterB.Pulse_Delay;
   OCR4C = heaterC.Pulse_Delay;
 
-  // Debugprintln(OCR4A);
-  // Debugprintln(OCR4B);
-  // Debugprintln(OCR4C);
+  #if LOGGING >= 5 //DEBUG 5
+    // Serial.println(OCR4A);
+    // Serial.println(OCR4B);
+    Serial.println(OCR4C);
+  #endif
 
-  // lcd.clear();
   
   // lcd.setCursor(0,0);
   // lcd.print("Set: ");
@@ -176,8 +183,9 @@ ISR(TIMER5_COMPA_vect){
   PORTA &= !B00000111; 
   zero_cross = false;
 
-  // //for testing
+#if TEST
   // reset_timer();
+#endif
 }
 
 
