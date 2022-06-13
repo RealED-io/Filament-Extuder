@@ -21,6 +21,7 @@ class ACPID{
         double PID_I = 0;
         double PID_D;
 
+        double PID_I_disableatError = 60000;
         double Error_Previous;
 
         unsigned int Delay_Min;
