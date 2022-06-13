@@ -24,12 +24,12 @@
 
 
 //pin declarations
-const int zero_cross_pin = 3;    //zero cross pin for hardware interrupt
-const int SPI_clock = 52;        //for thermocouples
-const int SPI_MISO = 50;
-const int SPI_thermoA = 10;      
-const int SPI_thermoB = 11;
-const int SPI_thermoC = 12;
+const uint8_t zero_cross_pin = 3;    //zero cross pin for hardware interrupt
+const uint8_t SPI_clock = 52;        //for thermocouples
+const uint8_t SPI_MISO = 50;
+const uint8_t SPI_thermoA = 10;      
+const uint8_t SPI_thermoB = 11;
+const uint8_t SPI_thermoC = 12;
 // PULSE PIN 22, 23, 24
 
 
