@@ -16,7 +16,7 @@
 #endif
 
 #ifndef TEST
-  #define TEST true
+  #define TEST false
 #endif
 
 
@@ -24,6 +24,7 @@
 
 
 //pin declarations
+#define Hall_Sensor_Pin A0
 const uint8_t zero_cross_pin = 3;    //zero cross pin for hardware interrupt
 const uint8_t SPI_clock = 52;        //for thermocouples
 const uint8_t SPI_MISO = 50;
@@ -44,9 +45,9 @@ bool read_loop = false;
 
 //classes init
 //set_temp, kP, kI, kD, reversed direction
-ACPID heaterA(53, 10, 10, 10, true);    
-ACPID heaterB(50, 10, 10, 10, true);           
-ACPID heaterC(50, 10, 10, 10, true);         
+ACPID heaterA(90, 2, 2, 2, true);    
+ACPID heaterB(90, 2, 2, 2, true);           
+ACPID heaterC(90, 2, 2, 2, true);         
 
 MAX6675 thermoA(SPI_clock, SPI_thermoA, SPI_MISO);
 MAX6675 thermoB(SPI_clock, SPI_thermoB, SPI_MISO);
@@ -102,9 +103,12 @@ void setup() {
   lcd.backlight();
   
   //PID settings
-  heaterA.Range(600,16000);
-  heaterB.Range(600,16000);
-  heaterC.Range(600,16000);
+  heaterA.Range(600,16660);
+  heaterB.Range(600,16660);
+  heaterC.Range(600,16660);
+
+  // hall sensor
+  pinMode(Hall_Sensor_Pin,INPUT);
 }
 
 void reset_timer(){
@@ -138,25 +142,58 @@ void heater_loop(){
   #endif
 
   
-  // lcd.setCursor(0,0);
-  // lcd.print("Set: ");
-  // lcd.setCursor(10,0);
-  // lcd.print("Real: ");
+  lcd.setCursor(0,0);
+  lcd.print("Set: ");
+  lcd.setCursor(10,0);
+  lcd.print("Real: ");
 
-  // lcd.setCursor(0,1);
-  // lcd.print(heaterA.Setpoint);
-  // lcd.setCursor(10,1);
-  // lcd.print(heaterA.Input);
+  lcd.setCursor(0,1);
+  lcd.print(heaterA.Setpoint);
+  lcd.setCursor(10,1);
+  lcd.print(heaterA.Input);
 
-  // lcd.setCursor(0,2);
-  // lcd.print(heaterB.Setpoint);
-  // lcd.setCursor(10,2);
-  // lcd.print(heaterB.Input);
+  lcd.setCursor(0,2);
+  lcd.print(heaterB.Setpoint);
+  lcd.setCursor(10,2);
+  lcd.print(heaterB.Input);
   
-  // lcd.setCursor(0,3);
-  // lcd.print(heaterC.Setpoint);
-  // lcd.setCursor(10,3);
-  // lcd.print(heaterC.Input);
+  lcd.setCursor(0,3);
+  lcd.print(heaterC.Setpoint);
+  lcd.setCursor(10,3);
+  lcd.print(heaterC.Input);
+}
+
+float convert2dia(float in) {
+  //converts an ADC reading to diameter
+  //Inspired by Sprinter / Marlin thermistor reading
+  byte numtemps = 5;
+  const float table[numtemps][2] = {
+    //{ADC reading in, diameter out}
+
+    //REPLACE THESE WITH YOUR OWN READINGS AND DRILL BIT DIAMETERS
+    
+    { 0  , 3 },  // safety
+    { 580  , 2.00 }, //2mm drill bit
+    { 647  , 1.50 }, //1.5mm
+    { 711  , 1.27 }, //1.27mm
+    // { 1000  , 1 }, // 1mm
+    { 1023  , 0 } //safety
+  };
+  byte i;
+  float out;
+  for (i = 1; i < numtemps; i++)
+  {
+    //check if we've found the appropriate row
+    if (table[i][0] > in)
+    {
+      float slope = ((float)table[i][1] - table[i - 1][1]) / ((float)table[i][0] - table[i - 1][0]);
+      float indiff = ((float)in - table[i - 1][0]);
+      float outdiff = slope * indiff;
+      float out = outdiff + table[i - 1][1];
+      return (out);
+      break;
+    }
+  }
 }
 
 //turns on firing pulse for heater 1
@@ -186,7 +223,7 @@ ISR(TIMER5_COMPA_vect){
   zero_cross = false;
 
 #if TEST
-  // reset_timer();
+  reset_timer();
 #endif
 }
 
