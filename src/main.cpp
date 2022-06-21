@@ -20,10 +20,7 @@
 #ifndef TEST
   #define TEST true
 #endif
-
-
-//************************ add ArduinoLog and remove PID library
-
+// or separate every debug
 
 //pin declarations
 #define Hall_Sensor_Pin A0
@@ -54,6 +51,8 @@ bool display_dynamic = true;
 bool display_valuesetter = false;
 bool hazard = false;
 bool control_RPM = true;
+bool pause = false;
+bool stop = false;
 uint8_t selectorButton = 0;
 static int oldposition;
 uint8_t menulevel[4] = {0, 0, 0, 0};
@@ -74,6 +73,8 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 
 //function declarations
 void safety_check();    // to be added
+void PAUSE();
+void STOP();
 void reset_timer();
 void heater_loop();
 float convert2dia(float);
@@ -108,7 +109,13 @@ void setup() {
   cli(); //stops interrupts
 
   //sets PA0 to PA2 (pin 22-24) as output
-  DDRA |= B00000111;
+  DDRA |= B00010101;
+
+  //sets timer 4
+  TCCR3A = 0;
+  TCCR3B = 0;
+  TCCR3B |= B00001010;  //set prescaler to 8 and set clear timer on compare (CTC)
+  TIMSK3 |= B00000010;  //enable 
 
   //sets timer 4
   TCCR4A = 0;
@@ -122,6 +129,8 @@ void setup() {
   TCCR5B |= B00000010;  //set prescaler to 8
   TIMSK5 |= B00000010;  //enable compare match 5A for timer reset 
 
+  // PWM for motor
+  OCR3A = 0;
   //firing delays rising edge
   OCR4A = 0;
   OCR4B = 0;
@@ -131,6 +140,7 @@ void setup() {
   OCR5A = pulse_delay_max;
 
   sei();  //continue interrupts
+
   pinMode(zero_cross_pin, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(zero_cross_pin), reset_timer, RISING);
   encoder = new RotaryEncoder(ROTARY_1A, ROTARY_1B, RotaryEncoder::LatchMode::FOUR3);
@@ -176,7 +186,6 @@ void loop() {
     heater_loop();
     // Serial.println(previousMillis);
     display_dynamic = true;
-
   };
 
 
@@ -273,6 +282,19 @@ float read_RPM()
     last_tacho = !last_tacho;
   }
   return 60000 / (2*Tachotime);    // 1000 ms/s * 60 s  / ms
+}
+
+void PAUSE()
+{
+  // set RPM to 0
+}
+
+void STOP()
+{
+  PAUSE();
+  heaterA.Setpoint = 0;
+  heaterB.Setpoint = 0;
+  heaterC.Setpoint = 0;
 }
 
 void checkPosition()
@@ -748,6 +770,10 @@ void display_lcd()
         }
         display_Set_heaterC();
         break; 
+      
+      case 8:                            // extrude/start/stop
+        STOP();
+        break;
 
       default:
         menulevel[2] = 0;
