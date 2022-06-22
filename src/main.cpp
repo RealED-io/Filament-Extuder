@@ -24,13 +24,13 @@
 
 //pin declarations
 #define Hall_Sensor_Pin A0
-const uint8_t zero_cross_pin = 19;    //zero cross pin for hardware interrupt
+const uint8_t zero_cross_pin = 18;    //zero cross pin for hardware interrupt
 const uint8_t SPI_CLOCK = 52;        //for thermocouples
 const uint8_t SPI_MISO = 50;
 const uint8_t SPI_thermoA = 30;      
 const uint8_t SPI_thermoB = 32;
 const uint8_t SPI_thermoC = 34;
-const uint8_t ROTARY_BUTTON = 18;
+const uint8_t ROTARY_BUTTON = 19;
 const uint8_t ROTARY_1A = 2;
 const uint8_t ROTARY_1B = 3;
 const uint8_t TACHO = 36;
