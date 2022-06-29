@@ -111,11 +111,11 @@ void setup() {
   //sets PA0 to PA2 (pin 22-24) as output
   DDRA |= B00010101;
 
-  //sets timer 4
-  TCCR3A = 0;
-  TCCR3B = 0;
-  TCCR3B |= B00001010;  //set prescaler to 8 and set clear timer on compare (CTC)
-  TIMSK3 |= B00000010;  //enable 
+  // //sets timer 4
+  // TCCR3A = 0;
+  // TCCR3B = 0;
+  // TCCR3B |= B00001010;  //set prescaler to 8 and set clear timer on compare (CTC)
+  // TIMSK3 |= B00000010;  //enable 
 
   //sets timer 4
   TCCR4A = 0;
