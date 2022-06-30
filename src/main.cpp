@@ -5,6 +5,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <RotaryEncoder.h>
 #include "ACPID.h"
+#include <AccelStepper.h>
 
 #ifndef LOGGING
   #define LOGGING 6
