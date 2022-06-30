@@ -35,6 +35,7 @@ const uint8_t ROTARY_BUTTON = 19;
 const uint8_t ROTARY_1A = 2;
 const uint8_t ROTARY_1B = 3;
 const uint8_t TACHO = 36;
+// const uint8_t STEP = 1;
 // PULSE PIN 22, 23, 24
 
 
