@@ -46,6 +46,10 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
     //PID total
     PID_value = PID_P + PID_I + PID_D;
     
+
+    
+
+
     //set PID value only within the specified range
     if(PID_value > Delay_Max)
     {
@@ -55,7 +59,7 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
     {
         PID_value = Delay_Min;
     }
-    
+
     //reversed direction for heater control
     if(PID_Direction)
     {
@@ -72,8 +76,8 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
         // Serial.println(PID_P);
         // Serial.println(PID_I);
         // Serial.println(PID_D);
-        // Serial.println(PID_value);
-        // Serial.println(Pulse_Delay);
+        Serial.println(PID_value);
+        Serial.println(Pulse_Delay);
         // Serial.println();
     #endif
 

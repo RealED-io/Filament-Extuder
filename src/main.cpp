@@ -8,7 +8,7 @@
 #include <AccelStepper.h>
 
 #ifndef LOGGING
-  #define LOGGING 6
+  #define LOGGING 0
   // 0 NONE
   // 1 FATAL
   // 2 ERROR
@@ -19,12 +19,13 @@
 #endif
 
 #ifndef TEST
-  #define TEST true
+  #define TEST false
 #endif
 // or separate every debug
 
 //pin declarations
-#define Hall_Sensor_Pin A0
+#define HALL_SENSOR_PIN A8
+#define MOTOR_STEP A15
 const uint8_t zero_cross_pin = 18;    //zero cross pin for hardware interrupt
 const uint8_t SPI_CLOCK = 52;        //for thermocouples
 const uint8_t SPI_MISO = 50;
@@ -36,7 +37,7 @@ const uint8_t ROTARY_1A = 2;
 const uint8_t ROTARY_1B = 3;
 const uint8_t TACHO = 36;
 // const uint8_t STEP = 1;
-// PULSE PIN 22, 23, 24
+// PULSE PIN 28, 26, 24
 
 
 //constants
@@ -61,9 +62,9 @@ uint8_t menulevel[4] = {0, 0, 0, 0};
 
 //classes init
 //set_temp, kP, kI, kD, reversed direction
-ACPID heaterA(90, 2, 2, 2, true);    
-ACPID heaterB(90, 2, 2, 2, true);           
-ACPID heaterC(90, 2, 2, 2, true);         
+ACPID heaterA(0, 100, 0.2, 20, true);    
+ACPID heaterB(0, 100, 0.2, 20, true);           
+ACPID heaterC(0, 100, 0.2, 20, true);         
 
 MAX6675 thermoA(SPI_CLOCK, SPI_thermoA, SPI_MISO);
 MAX6675 thermoB(SPI_CLOCK, SPI_thermoB, SPI_MISO);
@@ -151,15 +152,15 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(ROTARY_1B), checkPosition, CHANGE);
 
   //PID settings
-  heaterA.Range(600,16660);
-  heaterB.Range(600,16660);
-  heaterC.Range(600,16660);
-  heaterA.PID_I_disableatError = 5;
-  heaterB.PID_I_disableatError = 5;
-  heaterC.PID_I_disableatError = 5;
+  heaterA.Range(60,17660);
+  heaterB.Range(60,17660);
+  heaterC.Range(60,17660);
+  heaterA.PID_I_disableatError = 30;
+  heaterB.PID_I_disableatError = 30;
+  heaterC.PID_I_disableatError = 30;
 
   // hall sensor
-  pinMode(Hall_Sensor_Pin, INPUT);
+  pinMode(HALL_SENSOR_PIN, INPUT);
   pinMode(TACHO, INPUT_PULLUP);
 
   // end lcd startup
@@ -207,7 +208,7 @@ void loop() {
 
 // function definitions
 void reset_timer(){
-  PORTA &= !B00000111; 
+  PORTA &= !B01010100; 
   zero_cross = true;
   TCNT4 = 0;
   TCNT5 = 0;
@@ -293,7 +294,7 @@ void PAUSE()
 
 void STOP()
 {
-  PAUSE();
+  // PAUSE();
   heaterA.Setpoint = 0;
   heaterB.Setpoint = 0;
   heaterC.Setpoint = 0;
@@ -574,7 +575,7 @@ void display_Menu_2_3()
     cursor(6, 6);
     lcd.print(read_RPM());
     cursor(7, 6);
-    lcd.print(convert2dia(analogRead(Hall_Sensor_Pin)));
+    lcd.print(convert2dia(analogRead(HALL_SENSOR_PIN)));
     display_dynamic = false;
   }
   
@@ -775,6 +776,9 @@ void display_lcd()
       
       case 8:                            // extrude/start/stop
         STOP();
+        menulevel[1] = 0;
+        menulevel[2] = 0;
+        display_Menu_2();
         break;
 
       default:
@@ -836,27 +840,27 @@ void display_lcd()
 //turns on firing pulse for heater 1
 ISR(TIMER4_COMPA_vect){
   if(zero_cross){
-    PORTA |= B00000001;    // turns pin 22 on
+    PORTA |= B01000000;    // turns pin 28 on
   }
 }
 
 //turns on firing pulse for heater 2
 ISR(TIMER4_COMPB_vect){
   if(zero_cross){
-    PORTA |= B00000100;    // turns pin 24 on
+    PORTA |= B00010000;    // turns pin 26 on
   }
 }
 
 //turns on firing pulse for heater 3
 ISR(TIMER4_COMPC_vect){
   if(zero_cross){
-    PORTA |= B00010000;    // turns pin 26 on
+    PORTA |= B00000100;    // turns pin 24 on
   }
 }
 
 //turns off firing pulse for heater 1,2,3
 ISR(TIMER5_COMPA_vect){
-  PORTA &= !B00010101;     // turns pin 22, 24, 26 off
+  PORTA &= !B01010100;     // turns pin 28, 24, 26 off
   zero_cross = false;
 
 #if TEST
