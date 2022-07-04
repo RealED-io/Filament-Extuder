@@ -1,6 +1,9 @@
 #ifndef ACPID_h
 #define ACPID_h
 
+#define DIRECT true
+#define REVERSE false
+
 #include <Arduino.h>
 
 
@@ -20,6 +23,7 @@ class ACPID{
         double PID_P;
         double PID_I = 0;
         double PID_D;
+        double PID_value;
 
         double PID_I_disableatError = 60000;
         double Error_Previous;

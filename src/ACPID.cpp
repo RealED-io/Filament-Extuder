@@ -15,15 +15,41 @@
 ACPID::ACPID(double set, double constP, double constI, double constD, bool direction)
 {
     Setpoint = set;
-    kP = constP;
-    kI = constI;
-    kD = constD;
+
     PID_Direction = direction;
+
+    if(PID_Direction)       // DIRECT
+    {
+        kP = constP;
+        kI = constI;
+        kD = constD;
+    }
+    else                    // REVERSE
+    {
+        kP = (0 - constP);
+        kI = (0 - constI);
+        kD = (0 - constD);
+    }
+}
+
+void ACPID::Range(unsigned int min, unsigned int max)
+{
+    Delay_Min = min;
+    Delay_Max = max;
+    
+    if(PID_Direction)       // DIRECT
+    {
+        PID_I = Delay_Min;
+    }
+    else                    // REVERSE
+    {
+        PID_I = Delay_Max;
+    }
 }
 
 void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in ms
 {
-    double Error, PID_value;
+    double Error;
 
     Error = (Setpoint - Input);
     
@@ -53,22 +79,26 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
     //set PID value only within the specified range
     if(PID_value > Delay_Max)
     {
-        PID_value = Delay_Max;
+        Pulse_Delay = Delay_Max;
     }
     else if (PID_value < Delay_Min)
     {
-        PID_value = Delay_Min;
-    }
-
-    //reversed direction for heater control
-    if(PID_Direction)
-    {
-        Pulse_Delay = (Delay_Max + Delay_Min) - PID_value;        
+        Pulse_Delay = Delay_Min;
     }
     else
     {
         Pulse_Delay = PID_value;
     }
+
+    //reversed direction for heater control
+    // if(PID_Direction)
+    // {
+    //     Pulse_Delay = (Delay_Max + Delay_Min) - PID_value;        
+    // }
+    // else
+    // {
+    //     Pulse_Delay = PID_value;
+    // }
 
     Error_Previous = Error;
     
@@ -83,8 +113,4 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
 
 }
 
-void ACPID::Range(unsigned int min, unsigned int max)
-{
-    Delay_Min = min;
-    Delay_Max = max;
-}
+
