@@ -8,7 +8,7 @@
 #include <AccelStepper.h>
 
 #ifndef LOGGING
-  #define LOGGING 0
+  #define LOGGING 1
   // 0 NONE
   // 1 FATAL
   // 2 ERROR
@@ -41,7 +41,7 @@ const uint8_t TACHO = 36;
 
 
 //constants
-const int pulse_delay_max = 16600;
+const int pulse_delay_max = 16666;
 bool zero_cross = false;
 const int Delay_readtemp = 1000;
 const unsigned int tacho_timeout = 30000;
@@ -62,9 +62,9 @@ uint8_t menulevel[4] = {0, 0, 0, 0};
 
 //classes init
 //set_temp, kP, kI, kD, reversed direction
-ACPID heaterA(0, 100, 0.2, 20, true);    
-ACPID heaterB(0, 100, 0.2, 20, true);           
-ACPID heaterC(0, 100, 0.2, 20, true);         
+ACPID heaterA(0, 100, 20, 200, REVERSE);    
+ACPID heaterB(0, 100, 20, 200, REVERSE);           
+ACPID heaterC(0, 100, 20, 200, REVERSE);         
 
 MAX6675 thermoA(SPI_CLOCK, SPI_thermoA, SPI_MISO);
 MAX6675 thermoB(SPI_CLOCK, SPI_thermoB, SPI_MISO);
@@ -112,7 +112,7 @@ void setup() {
   cli(); //stops interrupts
 
   //sets PA0 to PA2 (pin 22-24) as output
-  DDRA |= B00010101;
+  DDRA |= B01010100;
 
   // //sets timer 4
   // TCCR3A = 0;
@@ -152,9 +152,9 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(ROTARY_1B), checkPosition, CHANGE);
 
   //PID settings
-  heaterA.Range(60,17660);
-  heaterB.Range(60,17660);
-  heaterC.Range(60,17660);
+  heaterA.Range(60,16660);
+  heaterB.Range(60,16660);
+  heaterC.Range(60,16660);
   heaterA.PID_I_disableatError = 30;
   heaterB.PID_I_disableatError = 30;
   heaterC.PID_I_disableatError = 30;
@@ -165,8 +165,11 @@ void setup() {
 
   // end lcd startup
   lcd.clear();
-  lcd.print(" FILAMENT EXTRUDER");
-  delay(1000);
+  cursor(2,6);
+  lcd.print("FILAMENT");
+  cursor(3,6);
+  lcd.print("EXTRUDER");
+  delay(3000);
   lcd.clear();
 }
 
@@ -618,6 +621,7 @@ void display_Set_heaterA()
     encoder->getDirection();    // resets value of direction before using it to set
   }
   heaterA.Setpoint += int(encoder->getDirection());
+  heaterA.PID_I = 0;
   display_static = false;
 }
 
@@ -637,6 +641,7 @@ void display_Set_heaterB()
     encoder->getDirection();    // resets value of direction before using it to set
   }
   heaterB.Setpoint += int(encoder->getDirection());
+  heaterB.PID_I = 0;
   display_static = false;
 }
 
@@ -656,6 +661,7 @@ void display_Set_heaterC()
     encoder->getDirection();    // resets value of direction before using it to set
   }
   heaterC.Setpoint += int(encoder->getDirection());
+  heaterC.PID_I = 0;
   display_static = false;
 }
 
@@ -837,30 +843,44 @@ void display_lcd()
   }
 }
 
-//turns on firing pulse for heater 1
-ISR(TIMER4_COMPA_vect){
-  if(zero_cross){
-    PORTA |= B01000000;    // turns pin 28 on
+// turns on firing pulse for heater 1
+ISR(TIMER4_COMPA_vect)
+{
+  static bool pulse_high;
+  if (zero_cross && !pulse_high)
+  {
+    PORTA |= B01000000; // turns pin 28 on
+    pulse_high = true;
+    OCR4A += 10;
+  }
+  if (pulse_high)
+  {
+    OCR4A -= 10;
   }
 }
 
-//turns on firing pulse for heater 2
-ISR(TIMER4_COMPB_vect){
-  if(zero_cross){
-    PORTA |= B00010000;    // turns pin 26 on
+// turns on firing pulse for heater 2
+ISR(TIMER4_COMPB_vect)
+{
+  if (zero_cross)
+  {
+    PORTA |= B00010000; // turns pin 26 on
   }
 }
 
-//turns on firing pulse for heater 3
-ISR(TIMER4_COMPC_vect){
-  if(zero_cross){
-    PORTA |= B00000100;    // turns pin 24 on
+// turns on firing pulse for heater 3
+ISR(TIMER4_COMPC_vect)
+{
+  if (zero_cross)
+  {
+    PORTA |= B00000100; // turns pin 24 on
   }
 }
 
-//turns off firing pulse for heater 1,2,3
-ISR(TIMER5_COMPA_vect){
-  PORTA &= !B01010100;     // turns pin 28, 24, 26 off
+// turns off firing pulse for heater 1,2,3
+ISR(TIMER5_COMPA_vect)
+{
+  PORTA &= !B01010100; // turns pin 28, 24, 26 off
   zero_cross = false;
 
 #if TEST
