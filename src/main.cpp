@@ -5,7 +5,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <RotaryEncoder.h>
 #include "ACPID.h"
-#include <AccelStepper.h>
+
 
 #ifndef LOGGING
   #define LOGGING 1
@@ -41,12 +41,18 @@ const uint8_t TACHO = 36;
 
 
 //constants
-const int pulse_delay_max = 16666;
+const int pulse_reset_delay = 16666;
+const int pulse_delay_max = 16660;
+const int pulse_delay_min = 60;
 bool zero_cross = false;
-const int Delay_readtemp = 1000;
+const unsigned int Delay_readtemp = 250;
+const unsigned int Delay_display = 1000;
+const unsigned int Delay_logging = 1000;
 const unsigned int tacho_timeout = 30000;
 unsigned long currentMillis = 0;
-unsigned long previousMillis = 0;
+unsigned long previousMillis_display = 0;
+unsigned long previousMillis_temp = 0;
+unsigned long previousMillis_logging = 0;
 bool read_loop = false;
 bool isButton = false;
 bool display_static = true;
@@ -55,16 +61,18 @@ bool display_valuesetter = false;
 bool hazard = false;
 bool control_RPM = true;
 bool pause = false;
-bool stop = false;
+bool start_stop = false;
+bool TEST_MODE = false;
+bool SERIAL_LOGGING = false;
 uint8_t selectorButton = 0;
 static int oldposition;
 uint8_t menulevel[4] = {0, 0, 0, 0};
 
 //classes init
 //set_temp, kP, kI, kD, reversed direction
-ACPID heaterA(0, 100, 20, 200, REVERSE);    
-ACPID heaterB(0, 100, 20, 200, REVERSE);           
-ACPID heaterC(0, 100, 20, 200, REVERSE);         
+ACPID heaterA(0, 450, 20, 5, REVERSE);    
+ACPID heaterB(0, 450, 20, 5, REVERSE);           
+ACPID heaterC(0, 450, 20, 5, REVERSE);         
 
 MAX6675 thermoA(SPI_CLOCK, SPI_thermoA, SPI_MISO);
 MAX6675 thermoB(SPI_CLOCK, SPI_thermoB, SPI_MISO);
@@ -77,13 +85,14 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 //function declarations
 void safety_check();    // to be added
 void PAUSE();
-void STOP();
+void START_STOP();
 void reset_timer();
 void heater_loop();
 float convert2dia(float);
 float read_RPM();
 void checkPosition();
 void buttonPressed();
+void check_mark(bool, uint8_t);
 void cursor(uint8_t, uint8_t);
 int8_t selector(int8_t);
 void menuleveler();
@@ -140,7 +149,7 @@ void setup() {
   OCR4C = 0;
 
   //firing delays falling edge
-  OCR5A = pulse_delay_max;
+  OCR5A = pulse_reset_delay;
 
   sei();  //continue interrupts
 
@@ -152,9 +161,9 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(ROTARY_1B), checkPosition, CHANGE);
 
   //PID settings
-  heaterA.Range(60,16660);
-  heaterB.Range(60,16660);
-  heaterC.Range(60,16660);
+  heaterA.Range(pulse_delay_min, pulse_delay_max);
+  heaterB.Range(pulse_delay_min, pulse_delay_max);
+  heaterC.Range(pulse_delay_min, pulse_delay_max);
   heaterA.PID_I_disableatError = 30;
   heaterB.PID_I_disableatError = 30;
   heaterC.PID_I_disableatError = 30;
@@ -181,18 +190,34 @@ void loop() {
   // if (hazard)
   // {
   //   // STOP ALL
-  // };
-  
+  // }
+  currentMillis = millis();
+
   menuleveler();
   display_lcd();
   read_RPM();
-  currentMillis = millis();
-  if(currentMillis - previousMillis >= Delay_readtemp){
-    previousMillis = currentMillis;
-    heater_loop();
-    // Serial.println(previousMillis);
+
+  if (currentMillis - previousMillis_display >= Delay_display)
+  {
+    previousMillis_display = currentMillis;
     display_dynamic = true;
-  };
+  }
+
+  if (currentMillis - previousMillis_temp >= Delay_readtemp)
+  {
+    previousMillis_temp = currentMillis;
+    heater_loop();
+  }
+
+  if (SERIAL_LOGGING)
+  {
+    if(currentMillis - previousMillis_logging >= Delay_logging)
+    {
+      previousMillis_logging = currentMillis;
+      Serial.println();
+    }
+  }
+  
 
 
 
@@ -222,13 +247,17 @@ void heater_loop(){
   heaterB.Input = thermoB.readCelsius();
   heaterC.Input = thermoC.readCelsius();
 
-  heaterA.Compute(Delay_readtemp);
-  heaterB.Compute(Delay_readtemp);
-  heaterC.Compute(Delay_readtemp);
 
-  OCR4A = heaterA.Pulse_Delay;
-  OCR4B = heaterB.Pulse_Delay;
-  OCR4C = heaterC.Pulse_Delay;
+  if (start_stop)
+  {
+    heaterA.Compute(Delay_readtemp);
+    heaterB.Compute(Delay_readtemp);
+    heaterC.Compute(Delay_readtemp);
+
+    OCR4A = heaterA.Pulse_Delay;
+    OCR4B = heaterB.Pulse_Delay;
+    OCR4C = heaterC.Pulse_Delay;
+  }
 
   #if LOGGING >= 5 //DEBUG 5
     // Serial.println(OCR4A);
@@ -295,12 +324,16 @@ void PAUSE()
   // set RPM to 0
 }
 
-void STOP()
+void START_STOP()
 {
-  // PAUSE();
-  heaterA.Setpoint = 0;
-  heaterB.Setpoint = 0;
-  heaterC.Setpoint = 0;
+  if (start_stop)
+  {
+    TIMSK4 |= B00001110;  //enable compare match 4A, 4B, 4C for heaters
+  }
+  else
+  {
+    TIMSK4 &= !B00001110;  //disable compare match 4A, 4B, 4C for heaters    
+  }
 }
 
 void checkPosition()
@@ -322,6 +355,20 @@ void buttonPressed()
 
   }
   last_interrupt_time = interrupt_time;
+}
+
+void check_mark(bool check, uint8_t select)
+{
+  if (check)
+  {
+    cursor(select,17);
+    lcd.print("[/]");
+  }
+  else
+  {
+    cursor(select,17);
+    lcd.print("[ ]");
+  }
 }
 
 void cursor(uint8_t swt, uint8_t offset = 0)
@@ -372,7 +419,7 @@ int8_t selector(int8_t numberofselection = 0)
   {
     int position = encoder->getPosition() + 1;
 
-    if (oldposition != position)
+    if ((oldposition != position) || display_static)
     {
 
       // erases old cursor
@@ -444,7 +491,7 @@ void menuleveler()
         
       //reset button state
       isButton = false;
-      
+
       #if LOGGING >= 6
         for(uint8_t i = 0; i < 4; i++)
         {
@@ -513,26 +560,25 @@ void display_Menu_3()
 
 void display_Menu_4()
 {
-  selector(3);
+  selector(4);
   // run only once to save processing time
   if (display_static)
   {
     cursor(1, 1);
     lcd.print("back");
     cursor(2, 1);
-    lcd.print("LCD timeout");
+    lcd.print("Test mode");
     cursor(3, 1);
     lcd.print("RPM Control");
-    if (control_RPM)
-    {
-      lcd.print("     [/]");
-    }
-    else
-    {
-      lcd.print("     [ ]");
-    };
+    cursor(4,1);
+    lcd.print("Serial logging");
+
+    check_mark(TEST_MODE, 2);
+    check_mark(control_RPM, 3);
+    check_mark(SERIAL_LOGGING, 4);
+
     display_static = false;
-  }
+  } 
 }
 
 void display_Menu_2_2()
@@ -578,6 +624,7 @@ void display_Menu_2_3()
     cursor(6, 6);
     lcd.print(read_RPM());
     cursor(7, 6);
+    // lcd.print(analogRead(HALL_SENSOR_PIN));
     lcd.print(convert2dia(analogRead(HALL_SENSOR_PIN)));
     display_dynamic = false;
   }
@@ -600,7 +647,14 @@ void display_Menu_2_3()
     cursor(7, 1);
     lcd.print("Size");
     cursor(8, 1);
-    lcd.print("stop");      
+    if (start_stop)
+    {
+      lcd.print("stop");
+    }
+    else
+    {
+      lcd.print("start");      
+    }
     display_static = false;
   }
 }
@@ -781,10 +835,11 @@ void display_lcd()
         break; 
       
       case 8:                            // extrude/start/stop
-        STOP();
-        menulevel[1] = 0;
+        start_stop = !start_stop;
+        START_STOP();
+        // menulevel[1] = 0;
+        display_static = true;
         menulevel[2] = 0;
-        display_Menu_2();
         break;
 
       default:
@@ -829,6 +884,24 @@ void display_lcd()
       menulevel[0] = 0;
       menulevel[1] = 0;
       display_MainMenu();
+      break;
+    
+    case 2:                             // settings/Test mode
+      TEST_MODE = !TEST_MODE;
+      display_static = true;
+      menulevel[1] = 0;
+      break;
+
+    case 3:                             // settings/control RPM
+      control_RPM = !control_RPM;
+      display_static = true;
+      menulevel[1] = 0;
+      break;
+
+    case 4:                             // settings/serial logging
+      SERIAL_LOGGING = !SERIAL_LOGGING;
+      display_static = true;
+      menulevel[1] = 0;
       break;
 
     default:
@@ -883,7 +956,8 @@ ISR(TIMER5_COMPA_vect)
   PORTA &= !B01010100; // turns pin 28, 24, 26 off
   zero_cross = false;
 
-#if TEST
-  reset_timer();
-#endif
+  if (TEST_MODE)
+  {
+    reset_timer();
+  }
 }
