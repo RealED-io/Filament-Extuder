@@ -25,7 +25,8 @@
 
 //pin declarations
 #define HALL_SENSOR_PIN A8
-#define MOTOR_STEP A15
+// #define MOTOR_STEP A15
+const uint8_t MOTOR_STEP = 5;
 const uint8_t zero_cross_pin = 18;    //zero cross pin for hardware interrupt
 const uint8_t SPI_CLOCK = 52;        //for thermocouples
 const uint8_t SPI_MISO = 50;
@@ -44,15 +45,20 @@ const uint8_t TACHO = 36;
 const int pulse_reset_delay = 16666;
 const int pulse_delay_max = 16660;
 const int pulse_delay_min = 60;
+const int motor_pulse_delay_max = 65535;
+const int motor_pulse_delay_min = 500;
 bool zero_cross = false;
 const unsigned int Delay_readtemp = 250;
+const unsigned int Delay_puller = 250;
 const unsigned int Delay_display = 1000;
 const unsigned int Delay_logging = 1000;
 const unsigned int tacho_timeout = 30000;
 unsigned long currentMillis = 0;
 unsigned long previousMillis_display = 0;
 unsigned long previousMillis_temp = 0;
+unsigned long previousMillis_puller = 0;
 unsigned long previousMillis_logging = 0;
+unsigned long motor_pulsecount = 0;
 bool read_loop = false;
 bool isButton = false;
 bool display_static = true;
@@ -60,7 +66,7 @@ bool display_dynamic = true;
 bool display_valuesetter = false;
 bool hazard = false;
 bool control_RPM = true;
-bool pause = false;
+bool motor_run = false;
 bool start_stop = false;
 bool TEST_MODE = false;
 bool SERIAL_LOGGING = false;
@@ -81,13 +87,15 @@ MAX6675 thermoC(SPI_CLOCK, SPI_thermoC, SPI_MISO);
 RotaryEncoder *encoder = nullptr;
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
+ACPID puller(1.75, 4500, 200, 50, REVERSE);
 
 //function declarations
 void safety_check();    // to be added
-void PAUSE();
+void MOTOR_RUN();
 void START_STOP();
 void reset_timer();
 void heater_loop();
+void puller_loop();
 float convert2dia(float);
 float read_RPM();
 void checkPosition();
@@ -121,13 +129,14 @@ void setup() {
   cli(); //stops interrupts
 
   //sets PA0 to PA2 (pin 22-24) as output
-  DDRA |= B01010100;
+  DDRA |= B01010101;
 
-  // //sets timer 4
-  // TCCR3A = 0;
-  // TCCR3B = 0;
-  // TCCR3B |= B00001010;  //set prescaler to 8 and set clear timer on compare (CTC)
-  // TIMSK3 |= B00000010;  //enable 
+  // sets timer 3 - for puller
+  TCCR3A = 0;
+  TCCR3B = 0;
+  TCCR3A = _BV(COM3A0) | _BV(WGM31) | _BV(WGM30);   // fast PWM, OCR4A TOP, prescaler 8
+  TCCR3B = _BV(WGM33) | _BV(WGM32) | _BV(CS31);
+  TIMSK3 |= B00000010;  //enable compare match 3A
 
   //sets timer 4
   TCCR4A = 0;
@@ -142,7 +151,8 @@ void setup() {
   TIMSK5 |= B00000010;  //enable compare match 5A for timer reset 
 
   // PWM for motor
-  OCR3A = 0;
+  OCR3A = 62000;
+
   //firing delays rising edge
   OCR4A = 0;
   OCR4B = 0;
@@ -168,9 +178,12 @@ void setup() {
   heaterB.PID_I_disableatError = 30;
   heaterC.PID_I_disableatError = 30;
 
+  puller.Range(motor_pulse_delay_min, motor_pulse_delay_max);
+
   // hall sensor
   pinMode(HALL_SENSOR_PIN, INPUT);
   pinMode(TACHO, INPUT_PULLUP);
+  pinMode(MOTOR_STEP, OUTPUT);
 
   // end lcd startup
   lcd.clear();
@@ -180,6 +193,8 @@ void setup() {
   lcd.print("EXTRUDER");
   delay(3000);
   lcd.clear();
+
+  MOTOR_RUN();
 }
 
 
@@ -207,6 +222,12 @@ void loop() {
   {
     previousMillis_temp = currentMillis;
     heater_loop();
+  }
+
+  if (currentMillis - previousMillis_puller >= Delay_puller)
+  {
+    previousMillis_puller = currentMillis;
+    puller_loop();
   }
 
   if (SERIAL_LOGGING)
@@ -266,6 +287,17 @@ void heater_loop(){
   #endif
 }
 
+void puller_loop()
+{
+  puller.Input = convert2dia(analogRead(HALL_SENSOR_PIN));
+  if (motor_run)
+  {
+    puller.Compute(Delay_puller);
+    OCR3A = puller.Pulse_Delay;
+  }
+  
+}
+
 float convert2dia(float in) {
   //converts an ADC reading to diameter
   //Inspired by Sprinter / Marlin thermistor reading
@@ -319,9 +351,30 @@ float read_RPM()
   return 60000 / (2*Tachotime);    // 1000 ms/s * 60 s  / ms
 }
 
-void PAUSE()
+void MOTOR_RUN()
 {
-  // set RPM to 0
+  if (motor_run)
+  {
+    noInterrupts();
+    // TCCR3A |= B01000000;
+    // TIMSK3 |= B00000010;  //enable compare match 4A, 4B, 4C for heaters
+    // OCR3A = 16000;
+    TCCR3A = _BV(COM3A0) | _BV(WGM31) | _BV(WGM30);   // fast PWM, OCR4A TOP, prescaler 8
+    TCCR3B = _BV(WGM33) | _BV(WGM32) | _BV(CS31);
+    TIMSK3 |= B00000010;  //enable compare match 3A
+    interrupts();
+  }
+  else
+  {
+    noInterrupts();
+    TCCR3A = 0;
+    TCCR3B = 0;
+    // TCCR3A &= !B01000000;
+    TIMSK3 &= !B00000010;  //disable compare match 4A, 4B, 4C for heaters   
+    // OCR3A = 16000; 
+    // // puller.PID_I = 65535;
+    interrupts();
+  }
 }
 
 void START_STOP()
@@ -333,6 +386,9 @@ void START_STOP()
   else
   {
     TIMSK4 &= !B00001110;  //disable compare match 4A, 4B, 4C for heaters    
+    heaterA.PID_I = 16666;
+    heaterA.PID_I = 16666;
+    heaterA.PID_I = 16666;
   }
 }
 
@@ -641,7 +697,14 @@ void display_Menu_2_3()
     cursor(4, 1);
     lcd.print("T3");
     cursor(5, 1);
-    lcd.print("pause");
+    if (motor_run)
+    {
+      lcd.print("stop MOTR");
+    }
+    else
+    {
+      lcd.print("run MOTR");      
+    }
     cursor(6, 1);
     lcd.print("RPM");
     cursor(7, 1);
@@ -649,11 +712,11 @@ void display_Menu_2_3()
     cursor(8, 1);
     if (start_stop)
     {
-      lcd.print("stop");
+      lcd.print("stop HTR");
     }
     else
     {
-      lcd.print("start");      
+      lcd.print("start HTR");      
     }
     display_static = false;
   }
@@ -834,7 +897,15 @@ void display_lcd()
         display_Set_heaterC();
         break; 
       
-      case 8:                            // extrude/start/stop
+      case 5:                            // extrude/start/run motor
+        motor_run = !motor_run;
+        MOTOR_RUN();
+        // menulevel[1] = 0;
+        display_static = true;
+        menulevel[2] = 0;
+        break;
+
+      case 8:                            // extrude/start/start htr
         start_stop = !start_stop;
         START_STOP();
         // menulevel[1] = 0;
@@ -914,6 +985,12 @@ void display_lcd()
     menulevel[0] = 0;
     break;
   }
+}
+
+// unnecessary code
+ISR(TIMER3_COMPA_vect)
+{
+  // motor_pulsecount++;
 }
 
 // turns on firing pulse for heater 1
