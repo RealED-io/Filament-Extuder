@@ -61,7 +61,15 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
 
     //Reset PID_I after passing set
     if((Error < 0) && (Error_Previous > 0)){
-        PID_I = 0;
+        if (PID_Direction)
+        {
+            PID_I = Delay_Min;      
+        }
+        else
+        {
+            PID_I = Delay_Max;            
+        }
+
     };
 
     //individually compute for P, I, and D
