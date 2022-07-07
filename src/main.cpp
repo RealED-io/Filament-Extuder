@@ -91,6 +91,7 @@ ACPID puller(1.75, 4500, 200, 50, REVERSE);
 
 //function declarations
 void safety_check();    // to be added
+void thermo_check(double);
 void MOTOR_RUN();
 void START_STOP();
 void reset_timer();
@@ -109,6 +110,7 @@ void display_Menu_2();
 void display_Menu_3();
 void display_Menu_4();
 void display_Menu_2_2();
+void display_Calibrate_sizer();
 void display_Set_heaterA();
 void display_Set_heaterB();
 void display_Set_heaterC();
@@ -275,9 +277,32 @@ void heater_loop(){
     heaterB.Compute(Delay_readtemp);
     heaterC.Compute(Delay_readtemp);
 
-    OCR4A = heaterA.Pulse_Delay;
-    OCR4B = heaterB.Pulse_Delay;
-    OCR4C = heaterC.Pulse_Delay;
+    if (heaterA.Input <= 0)
+    {
+      OCR4A = 65535;
+    }
+    else
+    {
+      OCR4A = heaterA.Pulse_Delay;      
+    }
+
+    if (heaterB.Input <= 0)
+    {
+      OCR4B = 65535;
+    }
+    else
+    {
+      OCR4B = heaterB.Pulse_Delay;      
+    }
+    
+    if (heaterC.Input <= 0)
+    {
+      OCR4C = 65535;
+    }
+    else
+    {
+      OCR4C = heaterC.Pulse_Delay;      
+    }
   }
 
   #if LOGGING >= 5 //DEBUG 5
@@ -722,6 +747,11 @@ void display_Menu_2_3()
   }
 }
 
+void display_Calibrate_sizer()
+{
+
+}
+
 void display_Set_heaterA()
 { 
   if (display_dynamic)
@@ -996,16 +1026,9 @@ ISR(TIMER3_COMPA_vect)
 // turns on firing pulse for heater 1
 ISR(TIMER4_COMPA_vect)
 {
-  static bool pulse_high;
-  if (zero_cross && !pulse_high)
+  if (zero_cross)
   {
     PORTA |= B01000000; // turns pin 28 on
-    pulse_high = true;
-    OCR4A += 10;
-  }
-  if (pulse_high)
-  {
-    OCR4A -= 10;
   }
 }
 
