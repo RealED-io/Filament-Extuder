@@ -92,6 +92,7 @@ ACPID puller(1.75, 4500, 200, 50, REVERSE);
 //function declarations
 void safety_check();    // to be added
 void thermo_check(double);
+void AC_MOTOR_RUN();
 void MOTOR_RUN();
 void START_STOP();
 void reset_timer();
@@ -768,7 +769,7 @@ void display_Set_heaterA()
     encoder->getDirection();    // resets value of direction before using it to set
   }
   heaterA.Setpoint += int(encoder->getDirection());
-  heaterA.PID_I = 0;
+  heaterA.PID_I = pulse_delay_max;
   display_static = false;
 }
 
@@ -788,7 +789,7 @@ void display_Set_heaterB()
     encoder->getDirection();    // resets value of direction before using it to set
   }
   heaterB.Setpoint += int(encoder->getDirection());
-  heaterB.PID_I = 0;
+  heaterB.PID_I = pulse_delay_max;
   display_static = false;
 }
 
@@ -808,7 +809,7 @@ void display_Set_heaterC()
     encoder->getDirection();    // resets value of direction before using it to set
   }
   heaterC.Setpoint += int(encoder->getDirection());
-  heaterC.PID_I = 0;
+  heaterC.PID_I = pulse_delay_max;
   display_static = false;
 }
 
