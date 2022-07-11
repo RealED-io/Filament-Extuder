@@ -27,6 +27,7 @@
 #define HALL_SENSOR_PIN A8
 // #define MOTOR_STEP A15
 const uint8_t MOTOR_STEP = 5;
+const uint8_t MOTOR_PULSE = 22;
 const uint8_t zero_cross_pin = 18;    //zero cross pin for hardware interrupt
 const uint8_t SPI_CLOCK = 52;        //for thermocouples
 const uint8_t SPI_MISO = 50;
@@ -131,8 +132,8 @@ void setup() {
 
   cli(); //stops interrupts
 
-  //sets PA0 to PA2 (pin 22-24) as output
-  DDRA |= B01010101;
+  //sets PA to PA (pin ) as output
+  DDRA |= B01010100;
 
   // sets timer 3 - for puller
   TCCR3A = 0;
@@ -187,6 +188,7 @@ void setup() {
   pinMode(HALL_SENSOR_PIN, INPUT);
   pinMode(TACHO, INPUT_PULLUP);
   pinMode(MOTOR_STEP, OUTPUT);
+  pinMode(22, OUTPUT);
 
   // end lcd startup
   lcd.clear();
@@ -238,7 +240,14 @@ void loop() {
     if(currentMillis - previousMillis_logging >= Delay_logging)
     {
       previousMillis_logging = currentMillis;
+      Serial.print(heaterA.Input);
+      Serial.print(", ");
+      Serial.print(heaterB.Input);
+      Serial.print(", ");
+      Serial.print(heaterC.Input);
+      Serial.print(", ");
       Serial.println();
+
     }
   }
   
@@ -278,31 +287,31 @@ void heater_loop(){
     heaterB.Compute(Delay_readtemp);
     heaterC.Compute(Delay_readtemp);
 
-    if (heaterA.Input <= 0)
+    if (heaterA.Input > 0 || TEST_MODE)               // check if thermocouple disconnects
     {
-      OCR4A = 65535;
+      OCR4A = heaterA.Pulse_Delay;
     }
     else
     {
-      OCR4A = heaterA.Pulse_Delay;      
+      OCR4A = 65535;                                  // turn heater off if thermocouple is off          
     }
 
-    if (heaterB.Input <= 0)
+    if (heaterB.Input > 0 || TEST_MODE)               
     {
-      OCR4B = 65535;
+      OCR4B = heaterB.Pulse_Delay;
     }
     else
     {
-      OCR4B = heaterB.Pulse_Delay;      
+      OCR4B = 65535;                              
     }
     
-    if (heaterC.Input <= 0)
+    if (heaterC.Input > 0 || TEST_MODE)               
     {
-      OCR4C = 65535;
+      OCR4C = heaterC.Pulse_Delay;
     }
     else
     {
-      OCR4C = heaterC.Pulse_Delay;      
+      OCR4C = 65535;                          
     }
   }
 
@@ -381,6 +390,7 @@ void MOTOR_RUN()
 {
   if (motor_run)
   {
+    digitalWrite(MOTOR_PULSE, HIGH);
     noInterrupts();
     // TCCR3A |= B01000000;
     // TIMSK3 |= B00000010;  //enable compare match 4A, 4B, 4C for heaters
@@ -389,6 +399,7 @@ void MOTOR_RUN()
     TCCR3B = _BV(WGM33) | _BV(WGM32) | _BV(CS31);
     TIMSK3 |= B00000010;  //enable compare match 3A
     interrupts();
+
   }
   else
   {
@@ -400,6 +411,7 @@ void MOTOR_RUN()
     // OCR3A = 16000; 
     // // puller.PID_I = 65535;
     interrupts();
+    digitalWrite(MOTOR_PULSE, LOW);
   }
 }
 
@@ -412,9 +424,9 @@ void START_STOP()
   else
   {
     TIMSK4 &= !B00001110;  //disable compare match 4A, 4B, 4C for heaters    
-    heaterA.PID_I = 16666;
-    heaterA.PID_I = 16666;
-    heaterA.PID_I = 16666;
+    heaterA.PID_I = pulse_delay_max;
+    heaterA.PID_I = pulse_delay_max;
+    heaterA.PID_I = pulse_delay_max;
   }
 }
 
@@ -695,13 +707,13 @@ void display_Menu_2_3()
   if (display_dynamic)
   {
     cursor(2, 4);
-    lcd.print(heaterA.Input);
+    if (heaterA.Input < 800) lcd.print(heaterA.Input);
     lcd.print(" ");
     cursor(3, 4);
-    lcd.print(heaterB.Input);
+    if (heaterB.Input < 800) lcd.print(heaterB.Input);
     lcd.print(" ");
     cursor(4, 4);
-    lcd.print(heaterC.Input);
+    if (heaterC.Input < 800) lcd.print(heaterC.Input);
     lcd.print(" ");
     cursor(6, 6);
     lcd.print(read_RPM());
@@ -725,11 +737,11 @@ void display_Menu_2_3()
     cursor(5, 1);
     if (motor_run)
     {
-      lcd.print("stop MOTR");
+      lcd.print("Motor ON");
     }
     else
     {
-      lcd.print("run MOTR");      
+      lcd.print("Motor OFF");      
     }
     cursor(6, 1);
     lcd.print("RPM");
@@ -738,11 +750,11 @@ void display_Menu_2_3()
     cursor(8, 1);
     if (start_stop)
     {
-      lcd.print("stop HTR");
+      lcd.print("Heatr ON");
     }
     else
     {
-      lcd.print("start HTR");      
+      lcd.print("Heatr OFF");      
     }
     display_static = false;
   }
@@ -1054,7 +1066,7 @@ ISR(TIMER4_COMPC_vect)
 // turns off firing pulse for heater 1,2,3
 ISR(TIMER5_COMPA_vect)
 {
-  PORTA &= !B01010100; // turns pin 28, 24, 26 off
+  PORTA &= !B01010100; // turns pin 28, 26, 24 off
   zero_cross = false;
 
   if (TEST_MODE)
