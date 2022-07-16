@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <EEPROM.h>
+// #include <EEPROM.h>
 #include <Wire.h>
 #include <max6675.h>
 #include <LiquidCrystal_I2C.h>
@@ -27,7 +27,7 @@
 #define HALL_SENSOR_PIN A8
 // #define MOTOR_STEP A15
 const uint8_t MOTOR_STEP = 5;
-const uint8_t MOTOR_PULSE = 22;
+const uint8_t MOTOR_PULSE = 31;
 const uint8_t zero_cross_pin = 18;    //zero cross pin for hardware interrupt
 const uint8_t SPI_CLOCK = 52;        //for thermocouples
 const uint8_t SPI_MISO = 50;
@@ -46,20 +46,23 @@ const uint8_t TACHO = 36;
 const int pulse_reset_delay = 16666;
 const int pulse_delay_max = 16660;
 const int pulse_delay_min = 60;
-const int motor_pulse_delay_max = 65535;
-const int motor_pulse_delay_min = 500;
+const int motor_pulse_delay_max = 35000;
+const int motor_pulse_delay_min = 10000;
 bool zero_cross = false;
 const unsigned int Delay_readtemp = 250;
 const unsigned int Delay_puller = 250;
 const unsigned int Delay_display = 1000;
 const unsigned int Delay_logging = 1000;
+const unsigned int Delay_read_dia = 25;
 const unsigned int tacho_timeout = 30000;
 unsigned long currentMillis = 0;
 unsigned long previousMillis_display = 0;
 unsigned long previousMillis_temp = 0;
 unsigned long previousMillis_puller = 0;
 unsigned long previousMillis_logging = 0;
+unsigned long previousMillis_read_dia = 0;
 unsigned long motor_pulsecount = 0;
+int analog_ave = 0;
 bool read_loop = false;
 bool isButton = false;
 bool display_static = true;
@@ -77,9 +80,10 @@ uint8_t menulevel[4] = {0, 0, 0, 0};
 
 //classes init
 //set_temp, kP, kI, kD, reversed direction
-ACPID heaterA(0, 450, 20, 5, REVERSE);    
-ACPID heaterB(0, 450, 20, 5, REVERSE);           
-ACPID heaterC(0, 450, 20, 5, REVERSE);         
+ACPID heaterA(0, 4, 8, 12, REVERSE);    
+ACPID heaterB(0, 16, 20, 24, REVERSE);           
+ACPID heaterC(0, 28, 32, 36, REVERSE);   
+// ACPID heaterC(0, 450, 20, 5, REVERSE);  
 
 MAX6675 thermoA(SPI_CLOCK, SPI_thermoA, SPI_MISO);
 MAX6675 thermoB(SPI_CLOCK, SPI_thermoB, SPI_MISO);
@@ -88,7 +92,8 @@ MAX6675 thermoC(SPI_CLOCK, SPI_thermoC, SPI_MISO);
 RotaryEncoder *encoder = nullptr;
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
-ACPID puller(1.75, 4500, 200, 50, REVERSE);
+ACPID puller(1.9, 40, 44, 48, DIRECT);
+// ACPID puller(1.9, 10, 10, 5, DIRECT);
 
 //function declarations
 void safety_check();    // to be added
@@ -99,6 +104,7 @@ void START_STOP();
 void reset_timer();
 void heater_loop();
 void puller_loop();
+void ANALOG_AVE(int, int*);
 float convert2dia(float);
 float read_RPM();
 void checkPosition();
@@ -113,6 +119,8 @@ void display_Menu_3();
 void display_Menu_4();
 void display_Menu_2_2();
 void display_Calibrate_sizer();
+void display_Calibrate_heaterkPID(double*);
+void display_Set_heaterA_kP();
 void display_Set_heaterA();
 void display_Set_heaterB();
 void display_Set_heaterC();
@@ -133,7 +141,7 @@ void setup() {
   cli(); //stops interrupts
 
   //sets PA to PA (pin ) as output
-  DDRA |= B01010100;
+  DDRA |= B11100000;
 
   // sets timer 3 - for puller
   TCCR3A = 0;
@@ -175,20 +183,24 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(ROTARY_1B), checkPosition, CHANGE);
 
   //PID settings
+  heaterA.Set_kPID(450, 20, 5);
+  heaterB.Set_kPID(450, 20, 5);
+  heaterC.Set_kPID(450, 20, 5);
   heaterA.Range(pulse_delay_min, pulse_delay_max);
   heaterB.Range(pulse_delay_min, pulse_delay_max);
   heaterC.Range(pulse_delay_min, pulse_delay_max);
   heaterA.PID_I_disableatError = 30;
   heaterB.PID_I_disableatError = 30;
   heaterC.PID_I_disableatError = 30;
-
+  puller.Set_kPID(100000, 10000, 50000);
   puller.Range(motor_pulse_delay_min, motor_pulse_delay_max);
+  puller.PID_I_reset = false;
 
   // hall sensor
   pinMode(HALL_SENSOR_PIN, INPUT);
   pinMode(TACHO, INPUT_PULLUP);
   pinMode(MOTOR_STEP, OUTPUT);
-  pinMode(22, OUTPUT);
+  pinMode(MOTOR_PULSE, OUTPUT);
 
   // end lcd startup
   lcd.clear();
@@ -212,10 +224,17 @@ void loop() {
   //   // STOP ALL
   // }
   currentMillis = millis();
-
+  // PORTA |= B00010000;
+  // digitalWrite(MOTOR_PULSE, HIGH);
   menuleveler();
   display_lcd();
   read_RPM();
+
+  if (currentMillis - previousMillis_read_dia >= Delay_read_dia)
+  {
+    previousMillis_read_dia = currentMillis;
+    ANALOG_AVE(analogRead(HALL_SENSOR_PIN), & analog_ave);
+  }
 
   if (currentMillis - previousMillis_display >= Delay_display)
   {
@@ -246,6 +265,7 @@ void loop() {
       Serial.print(", ");
       Serial.print(heaterC.Input);
       Serial.print(", ");
+      Serial.print(convert2dia(analog_ave));
       Serial.println();
 
     }
@@ -269,7 +289,7 @@ void loop() {
 
 // function definitions
 void reset_timer(){
-  PORTA &= !B01010100; 
+  PORTA &= !B11100000; 
   zero_cross = true;
   TCNT4 = 0;
   TCNT5 = 0;
@@ -324,7 +344,7 @@ void heater_loop(){
 
 void puller_loop()
 {
-  puller.Input = convert2dia(analogRead(HALL_SENSOR_PIN));
+  puller.Input = convert2dia(analog_ave);
   if (motor_run)
   {
     puller.Compute(Delay_puller);
@@ -343,9 +363,9 @@ float convert2dia(float in) {
     //REPLACE THESE WITH YOUR OWN READINGS AND DRILL BIT DIAMETERS
     
     { 0  , 3 },  // safety
-    { 580  , 2.00 }, //2mm drill bit
-    { 647  , 1.50 }, //1.5mm
-    { 711  , 1.27 }, //1.27mm
+    { 600  , 2.00 }, //2mm drill bit
+    { 692  , 1.6 }, //1.5mm
+    { 883  , 1.2 }, //1.27mm
     // { 1000  , 1 }, // 1mm
     { 1023  , 0 } //safety
   };
@@ -364,6 +384,19 @@ float convert2dia(float in) {
       break;
     }
   }
+}
+
+void ANALOG_AVE(int reading, int* output)
+{
+  static int vol_arr[31];
+  int vol_sum = 0;
+  vol_arr[30] = reading;
+  for (uint8_t i = 0; i < 30; i++)
+  {
+    vol_sum += vol_arr[i];
+    vol_arr[i] = vol_arr[i+1];
+  }
+  *output = int(vol_sum/30);
 }
 
 float read_RPM()
@@ -390,27 +423,30 @@ void MOTOR_RUN()
 {
   if (motor_run)
   {
-    digitalWrite(MOTOR_PULSE, HIGH);
-    noInterrupts();
+
+    // noInterrupts();
     // TCCR3A |= B01000000;
     // TIMSK3 |= B00000010;  //enable compare match 4A, 4B, 4C for heaters
     // OCR3A = 16000;
     TCCR3A = _BV(COM3A0) | _BV(WGM31) | _BV(WGM30);   // fast PWM, OCR4A TOP, prescaler 8
     TCCR3B = _BV(WGM33) | _BV(WGM32) | _BV(CS31);
     TIMSK3 |= B00000010;  //enable compare match 3A
-    interrupts();
-
+    // interrupts();
+    // PORTA |= B00010000;
+    puller.PID_I = 65535;
+    digitalWrite(MOTOR_PULSE, HIGH);
   }
   else
   {
-    noInterrupts();
+    // noInterrupts();
     TCCR3A = 0;
     TCCR3B = 0;
     // TCCR3A &= !B01000000;
     TIMSK3 &= !B00000010;  //disable compare match 4A, 4B, 4C for heaters   
     // OCR3A = 16000; 
     // // puller.PID_I = 65535;
-    interrupts();
+    // interrupts();
+    // PORTA &= !B00010000;
     digitalWrite(MOTOR_PULSE, LOW);
   }
 }
@@ -428,6 +464,11 @@ void START_STOP()
     heaterA.PID_I = pulse_delay_max;
     heaterA.PID_I = pulse_delay_max;
   }
+}
+
+void SAVETOEEPROM()
+{
+  // EEPROM.update();
 }
 
 void checkPosition()
@@ -663,13 +704,14 @@ void display_Menu_4()
     cursor(2, 1);
     lcd.print("Test mode");
     cursor(3, 1);
-    lcd.print("RPM Control");
-    cursor(4,1);
+    // lcd.print("RPM Control");
     lcd.print("Serial logging");
+    cursor(4,1);
+    lcd.print("Save to EEPROM");
 
     check_mark(TEST_MODE, 2);
-    check_mark(control_RPM, 3);
-    check_mark(SERIAL_LOGGING, 4);
+    // check_mark(control_RPM, 3);
+    check_mark(SERIAL_LOGGING, 3);
 
     display_static = false;
   } 
@@ -718,8 +760,8 @@ void display_Menu_2_3()
     cursor(6, 6);
     lcd.print(read_RPM());
     cursor(7, 6);
-    // lcd.print(analogRead(HALL_SENSOR_PIN));
-    lcd.print(convert2dia(analogRead(HALL_SENSOR_PIN)));
+    // lcd.print(analog_ave);
+    lcd.print(convert2dia(analog_ave));
     display_dynamic = false;
   }
   
@@ -763,6 +805,30 @@ void display_Menu_2_3()
 void display_Calibrate_sizer()
 {
 
+}
+
+void display_Calibrate_heaterkPID_dynamic(double* kPID, uint8_t level)
+{
+  if (display_dynamic)
+  {
+    cursor(level, 4);
+    lcd.print(*kPID);
+    lcd.print(" ");
+  }
+  
+  if (display_static)
+  {
+    // cursor(level, 1);
+    // lcd.print("kP");
+    encoder->getDirection();    // resets value of direction before using it to set
+  }
+  *kPID += int(encoder->getDirection());
+  display_static = false;
+}
+
+void display_Set_heaterA_kP()
+{
+  
 }
 
 void display_Set_heaterA()
@@ -1006,16 +1072,20 @@ void display_lcd()
       menulevel[1] = 0;
       break;
 
-    case 3:                             // settings/control RPM
-      control_RPM = !control_RPM;
+    case 3:                             // settings/serial logging
+      // control_RPM = !control_RPM;
+      // display_static = true;
+      // menulevel[1] = 0;
+      SERIAL_LOGGING = !SERIAL_LOGGING;
       display_static = true;
       menulevel[1] = 0;
       break;
 
-    case 4:                             // settings/serial logging
-      SERIAL_LOGGING = !SERIAL_LOGGING;
-      display_static = true;
-      menulevel[1] = 0;
+    case 4:                             // settings/save to EEPROM
+      menulevel[1] = 0;    
+      // SERIAL_LOGGING = !SERIAL_LOGGING;
+      // display_static = true;
+      // menulevel[1] = 0;
       break;
 
     default:
@@ -1041,7 +1111,7 @@ ISR(TIMER4_COMPA_vect)
 {
   if (zero_cross)
   {
-    PORTA |= B01000000; // turns pin 28 on
+    PORTA |= B10000000; // turns pin 29 on
   }
 }
 
@@ -1050,7 +1120,7 @@ ISR(TIMER4_COMPB_vect)
 {
   if (zero_cross)
   {
-    PORTA |= B00010000; // turns pin 26 on
+    PORTA |= B01000000; // turns pin 28 on
   }
 }
 
@@ -1059,14 +1129,14 @@ ISR(TIMER4_COMPC_vect)
 {
   if (zero_cross)
   {
-    PORTA |= B00000100; // turns pin 24 on
+    PORTA |= B00100000; // turns pin 27 on
   }
 }
 
 // turns off firing pulse for heater 1,2,3
 ISR(TIMER5_COMPA_vect)
 {
-  PORTA &= !B01010100; // turns pin 28, 26, 24 off
+  PORTA &= !B11100000; // turns pin 29, 28, 27 off
   zero_cross = false;
 
   if (TEST_MODE)
