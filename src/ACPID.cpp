@@ -12,24 +12,15 @@
   // 6 TRACE
 #endif
 
-ACPID::ACPID(double set, double constP, double constI, double constD, bool direction)
+ACPID::ACPID(double set, unsigned int idxP, unsigned int idxI, unsigned int idxD, bool direction)
 {
     Setpoint = set;
 
     PID_Direction = direction;
 
-    if(PID_Direction)       // DIRECT
-    {
-        kP = constP;
-        kI = constI;
-        kD = constD;
-    }
-    else                    // REVERSE
-    {
-        kP = (0 - constP);
-        kI = (0 - constI);
-        kD = (0 - constD);
-    }
+    EEPROM_kP = idxP;
+    EEPROM_kI = idxI;
+    EEPROM_kD = idxD;
 }
 
 void ACPID::Range(unsigned int min, unsigned int max)
@@ -60,17 +51,20 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
     }
 
     //Reset PID_I after passing set
-    if((Error < 0) && (Error_Previous > 0)){
-        if (PID_Direction)
-        {
-            PID_I = Delay_Min;      
-        }
-        else
-        {
-            PID_I = Delay_Max;            
-        }
+    if (PID_I_reset)
+    {
+        if((Error < 0) && (Error_Previous > 0)){
+            if (PID_Direction)
+            {
+                PID_I = Delay_Min;      
+            }
+            else
+            {
+                PID_I = Delay_Max;            
+            }
+        }  
+    }
 
-    };
 
     //individually compute for P, I, and D
     PID_P = kP * Error;
@@ -120,5 +114,28 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
     #endif
 
 }
+
+void ACPID::Set_kPID(double constP, double constI, double constD)
+{
+    if(PID_Direction)       // DIRECT
+    {
+        kP = constP;
+        kI = constI;
+        kD = constD;
+    }
+    else                    // REVERSE
+    {
+        kP = (0 - constP);
+        kI = (0 - constI);
+        kD = (0 - constD);
+    }
+}
+
+// void ACPID::Set_EEPROM_idx(unsigned int idxP, unsigned int idxI, unsigned int idxD)
+// {
+//     EEPROM_kP = idxP;
+//     EEPROM_kI = idxI;
+//     EEPROM_kD = idxD;
+// }
 
 

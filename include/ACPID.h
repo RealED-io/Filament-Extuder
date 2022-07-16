@@ -9,9 +9,10 @@
 
 class ACPID{
     public:
-        ACPID(double, double, double, double, bool);
+        ACPID(double, unsigned int, unsigned int, unsigned int, bool);
 
         bool PID_Direction;     //true for reversed, false for direct
+        bool PID_I_reset = true;
         double Input;            //PID input
         double Pulse_Delay;     //PID output
         double Setpoint;        //PID setpoint  
@@ -19,6 +20,10 @@ class ACPID{
         double kP;
         double kI;
         double kD;
+
+        unsigned int EEPROM_kP;
+        unsigned int EEPROM_kI;
+        unsigned int EEPROM_kD;
 
         double PID_P;
         double PID_I = 0;
@@ -33,6 +38,8 @@ class ACPID{
 
         void Compute(unsigned int);
         void Range(unsigned int, unsigned int);
+        void Set_kPID(double, double, double);
+        // void Set_EEPROM_idx(unsigned int, unsigned int, unsigned int);
 };
 
 #endif
