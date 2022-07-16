@@ -111,14 +111,14 @@ void check_mark(bool, uint8_t);
 void cursor(uint8_t, uint8_t);
 int8_t selector(int8_t);
 void menuleveler();
-void display_MainMenu();
-void display_Menu_2();
-void display_Menu_3();
-void display_Menu_4();
-void display_Menu_2_2();
-void display_Calibrate_sizer();
-void display_Calibrate_heaterkPID(double *);
-void display_Set_heaterA_kP();
+// void display_MainMenu();
+// void display_Menu_2();
+// void display_Menu_3();
+// void display_Menu_4();
+// void display_Menu_2_2();
+// void display_Calibrate_sizer();
+void display_Setter(double *, uint8_t, String);
+// void display_Set_heaterA_kP();
 void display_Set_heaterA();
 void display_Set_heaterB();
 void display_Set_heaterC();
@@ -482,16 +482,16 @@ void buttonPressed()
 	last_interrupt_time = interrupt_time;
 }
 
-void check_mark(bool check, uint8_t select)
+void check_mark(bool check, uint8_t printlevel)
 {
 	if (check)
 	{
-		cursor(select, 17);
+		cursor(printlevel, 17);
 		lcd.print("[/]");
 	}
 	else
 	{
-		cursor(select, 17);
+		cursor(printlevel, 17);
 		lcd.print("[ ]");
 	}
 }
@@ -595,7 +595,6 @@ void menuleveler()
 		if (display_valuesetter)
 		{
 			display_valuesetter = false;
-			// Serial.println("nani");
 		}
 		else
 		{
@@ -646,293 +645,340 @@ void menuleveler()
 	}
 }
 
-void display_MainMenu()
+// void display_MainMenu()
+// {
+// 	selector(4);
+// 	// run every poll
+// 	cursor(1, 1);
+// 	lcd.print(oldposition);
+
+// 	// run only once to save processing time
+// 	if (display_static)
+// 	{
+
+// 		cursor(2, 1);
+// 		lcd.print("Extrude");
+// 		cursor(3, 1);
+// 		lcd.print("Calibrate");
+// 		cursor(4, 1);
+// 		lcd.print("Settings");
+// 		display_static = false;
+// 	}
+// }
+
+// void display_Menu_2()
+// {
+// 	selector(3);
+// 	// run only once to save processing time
+// 	if (display_static)
+// 	{
+// 		cursor(1, 1);
+// 		lcd.print("back");
+// 		cursor(2, 1);
+// 		lcd.print("Set Temps");
+// 		cursor(3, 1);
+// 		lcd.print("Start");
+// 		display_static = false;
+// 	}
+// }
+
+// void display_Menu_3()
+// {
+// 	selector(4);
+// 	// run only once to save processing time
+// 	if (display_static)
+// 	{
+// 		cursor(1, 1);
+// 		lcd.print("back");
+// 		cursor(2, 1);
+// 		lcd.print("heater PID");
+// 		cursor(3, 1);
+// 		lcd.print("puller PID");
+// 		cursor(4, 1);
+// 		lcd.print("size sensor");
+// 		display_static = false;
+// 	}
+// }
+
+// void display_Menu_4()
+// {
+// 	selector(4);
+// 	// run only once to save processing time
+// 	if (display_static)
+// 	{
+// 		cursor(1, 1);
+// 		lcd.print("back");
+// 		cursor(2, 1);
+// 		lcd.print("Test mode");
+// 		cursor(3, 1);
+// 		// lcd.print("RPM Control");
+// 		lcd.print("Serial logging");
+// 		cursor(4, 1);
+// 		lcd.print("Save to EEPROM");
+
+// 		check_mark(TEST_MODE, 2);
+// 		// check_mark(control_RPM, 3);
+// 		check_mark(SERIAL_LOGGING, 3);
+
+// 		display_static = false;
+// 	}
+// }
+
+// void display_Menu_2_2()
+// {
+// 	selector(4);
+// 	// run only once to save processing time
+// 	if (display_static)
+// 	{
+// 		cursor(1, 1);
+// 		lcd.print("back");
+// 		cursor(2, 1);
+// 		lcd.print("T1");
+// 		cursor(3, 1);
+// 		lcd.print("T2");
+// 		cursor(4, 1);
+// 		lcd.print("T3");
+// 		// set temps
+// 		cursor(2, 4);
+// 		lcd.print(heaterA.Setpoint);
+// 		cursor(3, 4);
+// 		lcd.print(heaterB.Setpoint);
+// 		cursor(4, 4);
+// 		lcd.print(heaterC.Setpoint);
+// 		display_static = false;
+// 	}
+// }
+
+// void display_Menu_2_3()
+// {
+// 	selector(8);
+// 	// add heater read temps
+// 	if (display_dynamic)
+// 	{
+// 		cursor(2, 4);
+// 		if (heaterA.Input < 800)
+// 			lcd.print(heaterA.Input);
+// 		lcd.print(" ");
+// 		cursor(3, 4);
+// 		if (heaterB.Input < 800)
+// 			lcd.print(heaterB.Input);
+// 		lcd.print(" ");
+// 		cursor(4, 4);
+// 		if (heaterC.Input < 800)
+// 			lcd.print(heaterC.Input);
+// 		lcd.print(" ");
+// 		cursor(6, 6);
+// 		lcd.print(read_RPM());
+// 		cursor(7, 6);
+// 		// lcd.print(analog_ave);
+// 		lcd.print(convert2dia(analog_ave));
+// 		display_dynamic = false;
+// 	}
+
+// 	// run only once to save processing time
+// 	if (display_static)
+// 	{
+// 		cursor(1, 1);
+// 		lcd.print("back");
+// 		cursor(2, 1);
+// 		lcd.print("T1");
+// 		cursor(3, 1);
+// 		lcd.print("T2");
+// 		cursor(4, 1);
+// 		lcd.print("T3");
+// 		cursor(5, 1);
+// 		if (motor_run)
+// 		{
+// 			lcd.print("Motor ON");
+// 		}
+// 		else
+// 		{
+// 			lcd.print("Motor OFF");
+// 		}
+// 		cursor(6, 1);
+// 		lcd.print("RPM");
+// 		cursor(7, 1);
+// 		lcd.print("Size");
+// 		cursor(8, 1);
+// 		if (start_stop)
+// 		{
+// 			lcd.print("Heatr ON");
+// 		}
+// 		else
+// 		{
+// 			lcd.print("Heatr OFF");
+// 		}
+// 		display_static = false;
+// 	}
+// }
+
+// void display_Calibrate_sizer()
+// {
+// }
+// void display_Set_heaterA_kP()
+// {
+// }
+
+void display_Setter(double *value, uint8_t printlevel, String label)
 {
-	selector(4);
-	// run every poll
-	cursor(1, 1);
-	lcd.print(oldposition);
-
-	// run only once to save processing time
-	if (display_static)
-	{
-
-		cursor(2, 1);
-		lcd.print("Extrude");
-		cursor(3, 1);
-		lcd.print("Calibrate");
-		cursor(4, 1);
-		lcd.print("Settings");
-		display_static = false;
-	}
-}
-
-void display_Menu_2()
-{
-	selector(3);
-	// run only once to save processing time
-	if (display_static)
-	{
-		cursor(1, 1);
-		lcd.print("back");
-		cursor(2, 1);
-		lcd.print("Set Temps");
-		cursor(3, 1);
-		lcd.print("Start");
-		display_static = false;
-	}
-}
-
-void display_Menu_3()
-{
-	selector(4);
-	// run only once to save processing time
-	if (display_static)
-	{
-		cursor(1, 1);
-		lcd.print("back");
-		cursor(2, 1);
-		lcd.print("heater PID");
-		cursor(3, 1);
-		lcd.print("puller PID");
-		cursor(4, 1);
-		lcd.print("size sensor");
-		display_static = false;
-	}
-}
-
-void display_Menu_4()
-{
-	selector(4);
-	// run only once to save processing time
-	if (display_static)
-	{
-		cursor(1, 1);
-		lcd.print("back");
-		cursor(2, 1);
-		lcd.print("Test mode");
-		cursor(3, 1);
-		// lcd.print("RPM Control");
-		lcd.print("Serial logging");
-		cursor(4, 1);
-		lcd.print("Save to EEPROM");
-
-		check_mark(TEST_MODE, 2);
-		// check_mark(control_RPM, 3);
-		check_mark(SERIAL_LOGGING, 3);
-
-		display_static = false;
-	}
-}
-
-void display_Menu_2_2()
-{
-	selector(4);
-	// run only once to save processing time
-	if (display_static)
-	{
-		cursor(1, 1);
-		lcd.print("back");
-		cursor(2, 1);
-		lcd.print("T1");
-		cursor(3, 1);
-		lcd.print("T2");
-		cursor(4, 1);
-		lcd.print("T3");
-		// set temps
-		cursor(2, 4);
-		lcd.print(heaterA.Setpoint);
-		cursor(3, 4);
-		lcd.print(heaterB.Setpoint);
-		cursor(4, 4);
-		lcd.print(heaterC.Setpoint);
-		display_static = false;
-	}
-}
-
-void display_Menu_2_3()
-{
-	selector(8);
-	// add heater read temps
 	if (display_dynamic)
 	{
-		cursor(2, 4);
-		if (heaterA.Input < 800)
-			lcd.print(heaterA.Input);
-		lcd.print(" ");
-		cursor(3, 4);
-		if (heaterB.Input < 800)
-			lcd.print(heaterB.Input);
-		lcd.print(" ");
-		cursor(4, 4);
-		if (heaterC.Input < 800)
-			lcd.print(heaterC.Input);
-		lcd.print(" ");
-		cursor(6, 6);
-		lcd.print(read_RPM());
-		cursor(7, 6);
-		// lcd.print(analog_ave);
-		lcd.print(convert2dia(analog_ave));
-		display_dynamic = false;
-	}
-
-	// run only once to save processing time
-	if (display_static)
-	{
-		cursor(1, 1);
-		lcd.print("back");
-		cursor(2, 1);
-		lcd.print("T1");
-		cursor(3, 1);
-		lcd.print("T2");
-		cursor(4, 1);
-		lcd.print("T3");
-		cursor(5, 1);
-		if (motor_run)
-		{
-			lcd.print("Motor ON");
-		}
-		else
-		{
-			lcd.print("Motor OFF");
-		}
-		cursor(6, 1);
-		lcd.print("RPM");
-		cursor(7, 1);
-		lcd.print("Size");
-		cursor(8, 1);
-		if (start_stop)
-		{
-			lcd.print("Heatr ON");
-		}
-		else
-		{
-			lcd.print("Heatr OFF");
-		}
-		display_static = false;
-	}
-}
-
-void display_Calibrate_sizer()
-{
-}
-
-void display_Calibrate_heaterkPID_dynamic(double *kPID, uint8_t level)
-{
-	if (display_dynamic)
-	{
-		cursor(level, 4);
-		lcd.print(*kPID);
+		cursor(printlevel, label.length() + 2);
+		lcd.print(*value);
 		lcd.print(" ");
 	}
 
 	if (display_static)
 	{
-		// cursor(level, 1);
-		// lcd.print("kP");
+		cursor(printlevel, 1);
+		lcd.print(label);
 		encoder->getDirection(); // resets value of direction before using it to set
 	}
-	*kPID += int(encoder->getDirection());
+	*value += int(encoder->getDirection());
 	display_static = false;
 }
 
-void display_Set_heaterA_kP()
-{
-}
+// void display_Set_heaterA()
+// {
+// 	if (display_dynamic)
+// 	{
+// 		cursor(2, 4);
+// 		lcd.print(heaterA.Setpoint);
+// 		lcd.print(" ");
+// 	}
 
-void display_Set_heaterA()
-{
-	if (display_dynamic)
-	{
-		cursor(2, 4);
-		lcd.print(heaterA.Setpoint);
-		lcd.print(" ");
-	}
+// 	if (display_static)
+// 	{
+// 		cursor(2, 1);
+// 		lcd.print("T1");
+// 		encoder->getDirection(); // resets value of direction before using it to set
+// 	}
+// 	heaterA.Setpoint += int(encoder->getDirection());
+// 	heaterA.PID_I = pulse_delay_max;
+// 	display_static = false;
+// }
 
-	if (display_static)
-	{
-		cursor(2, 1);
-		lcd.print("T1");
-		encoder->getDirection(); // resets value of direction before using it to set
-	}
-	heaterA.Setpoint += int(encoder->getDirection());
-	heaterA.PID_I = pulse_delay_max;
-	display_static = false;
-}
+// void display_Set_heaterB()
+// {
+// 	if (display_dynamic)
+// 	{
+// 		cursor(3, 4);
+// 		lcd.print(heaterB.Setpoint);
+// 		lcd.print(" ");
+// 	}
 
-void display_Set_heaterB()
-{
-	if (display_dynamic)
-	{
-		cursor(3, 4);
-		lcd.print(heaterB.Setpoint);
-		lcd.print(" ");
-	}
+// 	if (display_static)
+// 	{
+// 		cursor(3, 1);
+// 		lcd.print("T2");
+// 		encoder->getDirection(); // resets value of direction before using it to set
+// 	}
+// 	heaterB.Setpoint += int(encoder->getDirection());
+// 	heaterB.PID_I = pulse_delay_max;
+// 	display_static = false;
+// }
 
-	if (display_static)
-	{
-		cursor(3, 1);
-		lcd.print("T2");
-		encoder->getDirection(); // resets value of direction before using it to set
-	}
-	heaterB.Setpoint += int(encoder->getDirection());
-	heaterB.PID_I = pulse_delay_max;
-	display_static = false;
-}
+// void display_Set_heaterC()
+// {
+// 	if (display_dynamic)
+// 	{
+// 		cursor(4, 4);
+// 		lcd.print(heaterC.Setpoint);
+// 		lcd.print(" ");
+// 	}
 
-void display_Set_heaterC()
-{
-	if (display_dynamic)
-	{
-		cursor(4, 4);
-		lcd.print(heaterC.Setpoint);
-		lcd.print(" ");
-	}
-
-	if (display_static)
-	{
-		cursor(4, 1);
-		lcd.print("T3");
-		encoder->getDirection(); // resets value of direction before using it to set
-	}
-	heaterC.Setpoint += int(encoder->getDirection());
-	heaterC.PID_I = pulse_delay_max;
-	display_static = false;
-}
+// 	if (display_static)
+// 	{
+// 		cursor(4, 1);
+// 		lcd.print("T3");
+// 		encoder->getDirection(); // resets value of direction before using it to set
+// 	}
+// 	heaterC.Setpoint += int(encoder->getDirection());
+// 	heaterC.PID_I = pulse_delay_max;
+// 	display_static = false;
+// }
 
 void display_lcd()
 {
 	switch (menulevel[0])
 	{
 	case 0: // Main Menu
-		display_static = true;
-		display_MainMenu();
+		// display_static = true;
+		// display_MainMenu();
+		selector(4);
+		// run every poll
+		cursor(1, 1);
+		lcd.print(oldposition);
+
+		// run only once to save processing time
+		if (display_static)
+		{
+
+			cursor(2, 1);
+			lcd.print("Extrude");
+			cursor(3, 1);
+			lcd.print("Calibrate");
+			cursor(4, 1);
+			lcd.print("Settings");
+			display_static = false;
+		}
 		break;
 
 	case 2: // extrude
 		switch (menulevel[1])
 		{
 		case 0: // extrude/
-			display_Menu_2();
+			// display_Menu_2();
+			selector(3);
+			// run only once to save processing time
+			if (display_static)
+			{
+				cursor(1, 1);
+				lcd.print("back");
+				cursor(2, 1);
+				lcd.print("Set Temps");
+				cursor(3, 1);
+				lcd.print("Start");
+				display_static = false;
+			}
 			break;
 
 		case 1: // extrude/back
 			menulevel[0] = 0;
 			menulevel[1] = 0;
-			display_MainMenu();
+			// display_MainMenu();
 			break;
 
 		case 2: // extrude/set temp
 			switch (menulevel[2])
 			{
 			case 0: // extrude/set temp/
-				display_Menu_2_2();
+				// display_Menu_2_2();
+				if (display_static)
+				{
+					cursor(1, 1);
+					lcd.print("back");
+					cursor(2, 1);
+					lcd.print("T1");
+					cursor(3, 1);
+					lcd.print("T2");
+					cursor(4, 1);
+					lcd.print("T3");
+					// set temps
+					cursor(2, 4);
+					lcd.print(heaterA.Setpoint);
+					cursor(3, 4);
+					lcd.print(heaterB.Setpoint);
+					cursor(4, 4);
+					lcd.print(heaterC.Setpoint);
+					display_static = false;
+				}
 				break;
 
 			case 1: // extrude/set temp/back
 				menulevel[1] = 0;
 				menulevel[2] = 0;
-				display_Menu_2();
+				// display_Menu_2();
 				break;
 
 			case 2: // extrude/set temp/T1
@@ -942,7 +988,8 @@ void display_lcd()
 					encoder->setPosition(1);
 					break;
 				}
-				display_Set_heaterA();
+				// display_Set_heaterA();
+				display_Setter(&heaterA.Setpoint, 2, "T1");
 				break;
 
 			case 3: // extrude/set temp/T2
@@ -952,7 +999,8 @@ void display_lcd()
 					encoder->setPosition(2);
 					break;
 				}
-				display_Set_heaterB();
+				// display_Set_heaterB();
+				display_Setter(&heaterB.Setpoint, 3, "T2");
 				break;
 
 			case 4: // extrude/set temp/T3
@@ -962,7 +1010,8 @@ void display_lcd()
 					encoder->setPosition(3);
 					break;
 				}
-				display_Set_heaterC();
+				// display_Set_heaterC();
+				display_Setter(&heaterC.Setpoint, 4, "T3");
 				break;
 
 			default:
@@ -975,13 +1024,72 @@ void display_lcd()
 			switch (menulevel[2])
 			{
 			case 0: // extrude/start/
-				display_Menu_2_3();
+				// display_Menu_2_3();
+				selector(8);
+				// add heater read temps
+				if (display_dynamic)
+				{
+					cursor(2, 4);
+					if (heaterA.Input < 800)
+						lcd.print(heaterA.Input);
+					lcd.print(" ");
+					cursor(3, 4);
+					if (heaterB.Input < 800)
+						lcd.print(heaterB.Input);
+					lcd.print(" ");
+					cursor(4, 4);
+					if (heaterC.Input < 800)
+						lcd.print(heaterC.Input);
+					lcd.print(" ");
+					cursor(6, 6);
+					lcd.print(read_RPM());
+					cursor(7, 6);
+					// lcd.print(analog_ave);
+					lcd.print(convert2dia(analog_ave));
+					display_dynamic = false;
+				}
+
+				// run only once to save processing time
+				if (display_static)
+				{
+					cursor(1, 1);
+					lcd.print("back");
+					cursor(2, 1);
+					lcd.print("T1");
+					cursor(3, 1);
+					lcd.print("T2");
+					cursor(4, 1);
+					lcd.print("T3");
+					cursor(5, 1);
+					if (motor_run)
+					{
+						lcd.print("Motor ON");
+					}
+					else
+					{
+						lcd.print("Motor OFF");
+					}
+					cursor(6, 1);
+					lcd.print("RPM");
+					cursor(7, 1);
+					lcd.print("Size");
+					cursor(8, 1);
+					if (start_stop)
+					{
+						lcd.print("Heatr ON");
+					}
+					else
+					{
+						lcd.print("Heatr OFF");
+					}
+					display_static = false;
+				}
 				break;
 
 			case 1: // extrude/start/back
 				menulevel[1] = 0;
 				menulevel[2] = 0;
-				display_Menu_2();
+				// display_Menu_2();
 				break;
 
 			case 2: // extrude/start/T1
@@ -991,7 +1099,8 @@ void display_lcd()
 					encoder->setPosition(1);
 					break;
 				}
-				display_Set_heaterA();
+				// display_Set_heaterA();
+				display_Setter(&heaterA.Setpoint, 2, "T1");
 				break;
 
 			case 3: // extrude/start/T2
@@ -1001,7 +1110,8 @@ void display_lcd()
 					encoder->setPosition(2);
 					break;
 				}
-				display_Set_heaterB();
+				// display_Set_heaterB();
+				display_Setter(&heaterB.Setpoint, 3, "T2");
 				break;
 
 			case 4: // extrude/start/T3
@@ -1011,7 +1121,8 @@ void display_lcd()
 					encoder->setPosition(3);
 					break;
 				}
-				display_Set_heaterC();
+				// display_Set_heaterC();
+				display_Setter(&heaterC.Setpoint, 4, "T3");
 				break;
 
 			case 5: // extrude/start/run motor
@@ -1046,13 +1157,27 @@ void display_lcd()
 		switch (menulevel[1])
 		{
 		case 0:
-			display_Menu_3();
+			// display_Menu_3();
+			selector(4);
+			// run only once to save processing time
+			if (display_static)
+			{
+				cursor(1, 1);
+				lcd.print("back");
+				cursor(2, 1);
+				lcd.print("heater PID");
+				cursor(3, 1);
+				lcd.print("puller PID");
+				cursor(4, 1);
+				lcd.print("size sensor");
+				display_static = false;
+			}
 			break;
 
 		case 1: // calibrate/back
 			menulevel[0] = 0;
 			menulevel[1] = 0;
-			display_MainMenu();
+			// display_MainMenu();
 			break;
 
 		default:
@@ -1065,13 +1190,33 @@ void display_lcd()
 		switch (menulevel[1])
 		{
 		case 0: // settings/
-			display_Menu_4();
+			// display_Menu_4();
+			selector(4);
+			// run only once to save processing time
+			if (display_static)
+			{
+				cursor(1, 1);
+				lcd.print("back");
+				cursor(2, 1);
+				lcd.print("Test mode");
+				cursor(3, 1);
+				// lcd.print("RPM Control");
+				lcd.print("Serial logging");
+				cursor(4, 1);
+				lcd.print("Save to EEPROM");
+
+				check_mark(TEST_MODE, 2);
+				// check_mark(control_RPM, 3);
+				check_mark(SERIAL_LOGGING, 3);
+
+				display_static = false;
+			}
 			break;
 
 		case 1: // settings/back
 			menulevel[0] = 0;
 			menulevel[1] = 0;
-			display_MainMenu();
+			// display_MainMenu();
 			break;
 
 		case 2: // settings/Test mode
