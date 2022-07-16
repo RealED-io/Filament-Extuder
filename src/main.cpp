@@ -81,7 +81,7 @@ uint8_t menulevel[4] = {0, 0, 0, 0};
 ACPID heaterA(0, 4, 8, 12, REVERSE);
 ACPID heaterB(0, 16, 20, 24, REVERSE);
 ACPID heaterC(0, 28, 32, 36, REVERSE);
-// ACPID heaterC(0, 450, 20, 5, REVERSE);
+// ACPID heaterC(0, 450, 20, 5, REVERSE); // original code
 
 MAX6675 thermoA(SPI_CLOCK, SPI_thermoA, SPI_MISO);
 MAX6675 thermoB(SPI_CLOCK, SPI_thermoB, SPI_MISO);
