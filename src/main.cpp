@@ -192,7 +192,7 @@ void setup()
 	heaterA.PID_I_disableatError = 30;
 	heaterB.PID_I_disableatError = 30;
 	heaterC.PID_I_disableatError = 30;
-	puller.Set_kPID(100000, 1000000, 500);
+	puller.Set_kPID(100000, 5000, 500);
 	puller.Range(motor_pulse_delay_min, motor_pulse_delay_max);
 	puller.PID_I_reset = true;
 
