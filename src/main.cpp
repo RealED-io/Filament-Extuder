@@ -92,7 +92,7 @@ MAX6675 thermoC(SPI_CLOCK, SPI_thermoC, SPI_MISO);
 RotaryEncoder *encoder = nullptr;
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
-ACPID puller(1.9, 40000, 44000, 48000, DIRECT);
+ACPID puller(1.9, 40, 44, 48, DIRECT);
 // ACPID puller(1.9, 10, 10, 5, DIRECT);
 
 // function declarations
@@ -192,7 +192,7 @@ void setup()
 	heaterA.PID_I_disableatError = 30;
 	heaterB.PID_I_disableatError = 30;
 	heaterC.PID_I_disableatError = 30;
-	puller.Set_kPID(100000, 10000, 50000);
+	puller.Set_kPID(1000, 100000, 5000);
 	puller.Range(motor_pulse_delay_min, motor_pulse_delay_max);
 	puller.PID_I_reset = false;
 
