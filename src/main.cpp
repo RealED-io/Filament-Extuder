@@ -24,6 +24,7 @@
 
 // pin declarations
 #define HALL_SENSOR_PIN A8
+#define TACHO A9
 // #define MOTOR_STEP A15
 const uint8_t MOTOR_STEP = 5;
 const uint8_t MOTOR_PULSE = 31;
@@ -36,7 +37,7 @@ const uint8_t SPI_thermoC = 34;
 const uint8_t ROTARY_BUTTON = 19;
 const uint8_t ROTARY_1A = 2;
 const uint8_t ROTARY_1B = 3;
-const uint8_t TACHO = 36;
+// const uint8_t TACHO = 36;
 // const uint8_t STEP = 1;
 // PULSE PIN 28, 26, 24
 
@@ -52,7 +53,7 @@ const unsigned int Delay_puller = 250;
 const unsigned int Delay_display = 1000;
 const unsigned int Delay_logging = 1000;
 const unsigned int Delay_read_dia = 25;
-const unsigned int tacho_timeout = 30000;
+const unsigned int tacho_timeout = 10000;		// MOTOR TIMEOUT
 unsigned long currentMillis = 0;
 unsigned long previousMillis_display = 0;
 unsigned long previousMillis_temp = 0;
@@ -75,6 +76,7 @@ bool SERIAL_LOGGING = false;
 uint8_t selectorButton = 0;
 static int oldposition;
 uint8_t menulevel[4] = {0, 0, 0, 0};
+String RPM;
 
 // classes init
 // set_temp, kP, kI, kD, reversed direction
@@ -260,6 +262,8 @@ void loop()
 			Serial.print(", ");
 			Serial.print(heaterC.Input);
 			Serial.print(", ");
+			Serial.print(RPM);
+			Serial.print(", ");
 			Serial.print(convert2dia(analog_ave));
 			Serial.println();
 		}
@@ -392,22 +396,25 @@ void ANALOG_AVE(int reading, int *output)
 
 float read_RPM()
 {
-	static bool last_tacho;
+	static bool last_tacho = true;
 	static unsigned long previousTacho;
 	static unsigned long currentTacho;
 	static float Tachotime;
 	currentTacho = millis();
-	if (previousTacho - currentTacho > tacho_timeout)
-	{
-		return NAN;
-	}
 	if (digitalRead(TACHO) != last_tacho)
 	{
 		Tachotime = currentTacho - previousTacho;
 		previousTacho = currentTacho;
 		last_tacho = !last_tacho;
 	}
-	return 60000 / (2 * Tachotime); // 1000 ms/s * 60 s  / ms
+	if (currentTacho - previousTacho > tacho_timeout)
+	{
+		Tachotime = 0;
+		motor_run = false;
+	}		
+	float ret = 60000 / (2 * Tachotime);
+	RPM = ret;
+	return ret; // 1000 ms/s * 60 s  / ms
 }
 
 void MOTOR_RUN()
@@ -1042,7 +1049,7 @@ void display_lcd()
 						lcd.print(heaterC.Input);
 					lcd.print(" ");
 					cursor(6, 6);
-					lcd.print(read_RPM());
+					lcd.print(RPM.substring(0,4));
 					cursor(7, 6);
 					// lcd.print(analog_ave);
 					lcd.print(convert2dia(analog_ave));
