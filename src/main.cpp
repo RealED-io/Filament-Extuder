@@ -92,7 +92,7 @@ MAX6675 thermoC(SPI_CLOCK, SPI_thermoC, SPI_MISO);
 RotaryEncoder *encoder = nullptr;
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
-ACPID puller(1.9, 40, 44, 48, DIRECT);
+ACPID puller(1.9, 40000, 44000, 48000, DIRECT);
 // ACPID puller(1.9, 10, 10, 5, DIRECT);
 
 // function declarations
