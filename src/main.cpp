@@ -192,9 +192,9 @@ void setup()
 	heaterA.PID_I_disableatError = 30;
 	heaterB.PID_I_disableatError = 30;
 	heaterC.PID_I_disableatError = 30;
-	puller.Set_kPID(1000, 100000, 5000);
+	puller.Set_kPID(100000, 1000000, 500);
 	puller.Range(motor_pulse_delay_min, motor_pulse_delay_max);
-	puller.PID_I_reset = false;
+	puller.PID_I_reset = true;
 
 	// hall sensor
 	pinMode(HALL_SENSOR_PIN, INPUT);
@@ -431,7 +431,7 @@ void MOTOR_RUN()
 		TIMSK3 |= B00000010; // enable compare match 3A
 		// interrupts();
 		// PORTA |= B00010000;
-		puller.PID_I = 65535;
+		// puller.PID_I = 65535;
 		digitalWrite(MOTOR_PULSE, HIGH);
 	}
 	else
