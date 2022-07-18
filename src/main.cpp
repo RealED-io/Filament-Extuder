@@ -410,7 +410,7 @@ float read_RPM()
 	if (currentTacho - previousTacho > tacho_timeout)
 	{
 		Tachotime = 0;
-		motor_run = false;
+		// motor_run = false;
 	}		
 	float ret = 60000 / (2 * Tachotime);
 	RPM = ret;
