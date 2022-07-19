@@ -21,9 +21,9 @@ class ACPID{
         double kI;
         double kD;
 
-        unsigned int EEPROM_kP;
-        unsigned int EEPROM_kI;
-        unsigned int EEPROM_kD;
+        unsigned int idx_kP;
+        unsigned int idx_kI;
+        unsigned int idx_kD;
 
         double PID_P;
         double PID_I = 0;

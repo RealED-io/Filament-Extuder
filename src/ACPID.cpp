@@ -18,9 +18,9 @@ ACPID::ACPID(double set, unsigned int idxP, unsigned int idxI, unsigned int idxD
 
     PID_Direction = direction;
 
-    EEPROM_kP = idxP;
-    EEPROM_kI = idxI;
-    EEPROM_kD = idxD;
+    idx_kP = idxP;
+    idx_kI = idxI;
+    idx_kD = idxD;
 }
 
 void ACPID::Range(unsigned int min, unsigned int max)
