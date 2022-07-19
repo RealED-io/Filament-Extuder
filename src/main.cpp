@@ -70,6 +70,7 @@ bool display_valuesetter = false;
 bool hazard = false;
 bool control_RPM = true;
 bool motor_run = false;
+bool stepper_run = false;
 bool start_stop = false;
 bool TEST_MODE = false;
 bool SERIAL_LOGGING = false;
@@ -98,7 +99,7 @@ ACPID puller(1.9, 40, 44, 48, DIRECT);
 // function declarations
 void safety_check(); // to be added
 void thermo_check(double);
-void AC_MOTOR_RUN();
+void STEPPER_RUN();
 void MOTOR_RUN();
 void START_STOP();
 void reset_timer();
@@ -204,6 +205,7 @@ void setup()
 	delay(3000);
 	lcd.clear();
 
+	STEPPER_RUN();
 	MOTOR_RUN();
 }
 
@@ -323,7 +325,7 @@ void heater_loop()
 void puller_loop()
 {
 	puller.Input = convert2dia(analog_ave);
-	if (motor_run)
+	if (stepper_run)
 	{
 		puller.Compute(Delay_puller);
 		OCR3A = puller.Pulse_Delay;
@@ -400,9 +402,9 @@ float read_RPM()
 	return ret; // 1000 ms/s * 60 s  / ms
 }
 
-void MOTOR_RUN()
+void STEPPER_RUN()
 {
-	if (motor_run)
+	if (stepper_run)
 	{
 
 		// noInterrupts();
@@ -413,7 +415,7 @@ void MOTOR_RUN()
 		// interrupts();
 		// PORTA |= B00010000;
 		// puller.PID_I = 65535;
-		digitalWrite(MOTOR_PULSE, HIGH);
+		// digitalWrite(MOTOR_PULSE, HIGH);		// AC motor run
 	}
 	else
 	{
@@ -426,8 +428,22 @@ void MOTOR_RUN()
 		// // puller.PID_I = 65535;
 		// interrupts();
 		// PORTA &= !B00010000;
-		digitalWrite(MOTOR_PULSE, LOW);
+		// digitalWrite(MOTOR_PULSE, LOW);		// AC motor run
 	}
+}
+
+void MOTOR_RUN()
+{
+	if (motor_run)
+	{
+		digitalWrite(MOTOR_PULSE, HIGH);		// AC motor run
+	}
+	else
+	{
+		digitalWrite(MOTOR_PULSE, LOW);			// AC motor run
+	}
+	
+	
 }
 
 void START_STOP()
@@ -797,8 +813,11 @@ void display_lcd()
 					if (heaterC.Input < 800)
 						lcd.print(heaterC.Input);
 					lcd.print(" ");
-					cursor(6, 6);
-					lcd.print(RPM.substring(0,4));
+					cursor(5, 7);
+					if (motor_run)
+						lcd.print(RPM.substring(0,4));
+					// cursor(6, 6);
+					// lcd.print(RPM.substring(0,4));
 					cursor(7, 6);
 					// lcd.print(analog_ave);
 					lcd.print(convert2dia(analog_ave));
@@ -826,6 +845,14 @@ void display_lcd()
 						lcd.print("Motor OFF");
 					}
 					cursor(6, 1);
+					if (stepper_run)
+					{
+						lcd.print("Stepr ON");
+					}
+					else
+					{
+						lcd.print("Stepr OFF");
+					}
 					lcd.print("RPM");
 					cursor(7, 1);
 					lcd.print("Size");
@@ -884,6 +911,14 @@ void display_lcd()
 			case 5: // extrude/start/run motor
 				motor_run = !motor_run;
 				MOTOR_RUN();
+				// menulevel[1] = 0;
+				display_static = true;
+				menulevel[2] = 0;
+				break;
+
+			case 6: // extrude/start/run stepper
+				stepper_run = !stepper_run;
+				STEPPER_RUN();
 				// menulevel[1] = 0;
 				display_static = true;
 				menulevel[2] = 0;
