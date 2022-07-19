@@ -1,5 +1,5 @@
 #include <Arduino.h>
-// #include <EEPROM.h>
+#include <EEPROM.h>
 #include <Wire.h>
 #include <max6675.h>
 #include <LiquidCrystal_I2C.h>
