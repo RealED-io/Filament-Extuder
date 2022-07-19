@@ -813,7 +813,7 @@ void display_lcd()
 					if (heaterC.Input < 800)
 						lcd.print(heaterC.Input);
 					lcd.print(" ");
-					cursor(5, 7);
+					cursor(5, 6);
 					if (motor_run)
 						lcd.print(RPM.substring(0,4));
 					// cursor(6, 6);
