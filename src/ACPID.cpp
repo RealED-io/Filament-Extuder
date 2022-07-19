@@ -12,7 +12,7 @@
   // 6 TRACE
 #endif
 
-ACPID::ACPID(double set, unsigned int idxP, unsigned int idxI, unsigned int idxD, bool direction)
+ACPID::ACPID(float set, unsigned int idxP, unsigned int idxI, unsigned int idxD, bool direction)
 {
     Setpoint = set;
 
@@ -40,7 +40,7 @@ void ACPID::Range(unsigned int min, unsigned int max)
 
 void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in ms
 {
-    double Error;
+    float Error;
 
     Error = (Setpoint - Input);
     
@@ -115,7 +115,7 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
 
 }
 
-void ACPID::Set_kPID(double constP, double constI, double constD)
+void ACPID::Set_kPID(float constP, float constI, float constD)
 {
     if(PID_Direction)       // DIRECT
     {

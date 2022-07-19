@@ -78,6 +78,15 @@ uint8_t selectorButton = 0;
 static int oldposition;
 uint8_t menulevel[5] = {0, 0, 0, 0, 0};
 String RPM;
+float dia_analog_val[6] = {0, 600, 692, 883, 1000, 1023};
+float dia_size_cal[6] = {3, 2.00, 1.60, 1.20, 1.00, 0};
+
+		// {0, 3},		 // safety
+		// {600, 2.00}, // 2mm drill bit
+		// {692, 1.6},	 // 1.5mm
+		// {883, 1.2},	 // 1.27mm
+		// { 1000  , 1}, // 1mm
+		// {1023, 0} // safety
 
 // classes init
 // set_temp, kP, kI, kD, reversed direction
@@ -98,7 +107,7 @@ ACPID puller(1.9, 40, 44, 48, DIRECT);
 
 // function declarations
 void safety_check(); // to be added
-void thermo_check(double);
+void thermo_check(float);
 void STEPPER_RUN();
 void MOTOR_RUN();
 void START_STOP();
@@ -114,11 +123,11 @@ void check_mark(bool, uint8_t);
 void cursor(uint8_t, uint8_t);
 int8_t selector(int8_t);
 void menuleveler();
-void display_Setter(double *, int, uint8_t, String);
+void display_Setter(float *, int, uint8_t, String);
 // void display_Setter_kPID();
 void display_lcd();
-void save_cal(unsigned int, double, unsigned int, double, unsigned int, double);
-void load_cal(unsigned int, double*, unsigned int, double*, unsigned int, double*);
+void save_cal(unsigned int, float, unsigned int, float, unsigned int, float);
+void load_cal(unsigned int, float*, unsigned int, float*, unsigned int, float*);
 void save_cal_all();
 void load_cal_all();
 
@@ -339,8 +348,8 @@ float convert2dia(float in)
 {
 	// converts an ADC reading to diameter
 	// Inspired by Sprinter / Marlin thermistor reading
-	byte numtemps = 5;
-	const float table[numtemps][2] = {
+	byte numtemps = 6;
+	float table[numtemps][2] = {
 		//{ADC reading in, diameter out}
 
 		// REPLACE THESE WITH YOUR OWN READINGS AND DRILL BIT DIAMETERS
@@ -349,7 +358,7 @@ float convert2dia(float in)
 		{600, 2.00}, // 2mm drill bit
 		{692, 1.6},	 // 1.5mm
 		{883, 1.2},	 // 1.27mm
-		// { 1000  , 1 }, // 1mm
+		{ 1000  , 1}, // 1mm
 		{1023, 0} // safety
 	};
 	byte i;
@@ -464,14 +473,14 @@ void START_STOP()
 	}
 }
 
-void save_cal(unsigned int idx_kP, double kP, unsigned int idx_kI, double kI, unsigned int idx_kD, double kD)
+void save_cal(unsigned int idx_kP, float kP, unsigned int idx_kI, float kI, unsigned int idx_kD, float kD)
 {
 	EEPROM.put(idx_kP, kP);
 	EEPROM.put(idx_kI, kI);
 	EEPROM.put(idx_kD, kD);
 }
 
-void load_cal(unsigned int idx_kP, double* kP, unsigned int idx_kI, double* kI, unsigned int idx_kD, double* kD)
+void load_cal(unsigned int idx_kP, float* kP, unsigned int idx_kI, float* kI, unsigned int idx_kD, float* kD)
 {
 	EEPROM.get(idx_kP, *kP);
 	EEPROM.get(idx_kI, *kI);
@@ -688,7 +697,7 @@ void menuleveler()
 }
 
 
-void display_Setter(double *value, int multiplier, uint8_t printlevel, String label)
+void display_Setter(float *value, int multiplier, uint8_t printlevel, String label)
 {
 	if (display_dynamic)
 	{
