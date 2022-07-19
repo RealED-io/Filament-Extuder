@@ -732,6 +732,7 @@ void display_lcd()
 			switch (menulevel[2])
 			{
 			case 0: // extrude/set temp/
+				selector(4);
 				// display_Menu_2_2();
 				if (display_static)
 				{
