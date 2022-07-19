@@ -76,7 +76,7 @@ bool TEST_MODE = false;
 bool SERIAL_LOGGING = false;
 uint8_t selectorButton = 0;
 static int oldposition;
-uint8_t menulevel[4] = {0, 0, 0, 0};
+uint8_t menulevel[5] = {0, 0, 0, 0, 0};
 String RPM;
 
 // classes init
@@ -614,6 +614,16 @@ void menuleveler()
 				{
 					if (menulevel[3] != 0)
 					{
+						if (menulevel[4] != 0)
+						{
+							/* code */
+						}
+						else
+						{
+							menulevel[4] = oldposition;
+						}
+						
+						
 					}
 					else
 					{
@@ -639,7 +649,7 @@ void menuleveler()
 		isButton = false;
 
 #if LOGGING >= 6
-		for (uint8_t i = 0; i < 4; i++)
+		for (uint8_t i = 0; i < 5; i++)
 		{
 			Serial.print(menulevel[i]);
 			Serial.print(" ");
@@ -971,6 +981,104 @@ void display_lcd()
 			// display_MainMenu();
 			break;
 
+		case 2:	// calibrate/heater PID
+			switch (menulevel[2])
+			{
+			case 0:
+				selector(4);
+				// run only once to save processing time
+				if (display_static)
+				{
+					cursor(1, 1);
+					lcd.print("back");
+					cursor(2, 1);
+					lcd.print("heater A");
+					cursor(3, 1);
+					lcd.print("heater B");
+					cursor(4, 1);
+					lcd.print("heater C");
+					display_static = false;
+				}
+				break;
+			
+			case 1: // calibrate/heater PID/back
+				menulevel[1] = 0;
+				menulevel[2] = 0;
+				break;
+
+			case 2:
+				switch (menulevel[3])
+				{
+				case 0:
+					selector(4);
+					// run only once to save processing time
+					if (display_static)
+					{
+						cursor(1, 1);
+						lcd.print("back");
+						cursor(2, 1);
+						lcd.print("kP");
+						cursor(3, 1);
+						lcd.print("kI");
+						cursor(4, 1);
+						lcd.print("kD");
+						cursor(2, 4);
+						lcd.print(heaterA.kP);
+						cursor(3, 4);
+						lcd.print(heaterA.kI);
+						cursor(4, 4);
+						lcd.print(heaterA.kD);
+						display_static = false;
+					}
+					break;
+				
+				case 1: // calibrate/heater PID/heater A/back
+					menulevel[2] = 0;
+					menulevel[3] = 0;
+					break;	
+
+				case 2:	
+					if (!display_valuesetter)
+					{
+						menulevel[3] = 0;
+						encoder->setPosition(1);
+						break;
+					}
+					// display_Set_heaterC();
+					display_Setter(&heaterA.kP, 2, "kP");
+					break;	
+
+				case 3:	
+					if (!display_valuesetter)
+					{
+						menulevel[3] = 0;
+						encoder->setPosition(2);
+						break;
+					}
+					// display_Set_heaterC();
+					display_Setter(&heaterA.kI, 3, "kI");
+					break;	
+
+				case 4:	
+					if (!display_valuesetter)
+					{
+						menulevel[3] = 0;
+						encoder->setPosition(3);
+						break;
+					}
+					// display_Set_heaterC();
+					display_Setter(&heaterA.kD, 4, "kD");
+					break;	
+
+				default:
+					menulevel[3] = 0;
+					break;	
+				}
+
+			default:
+				menulevel[2] = 0;
+				break;
+			}
 		default:
 			menulevel[1] = 0;
 			break;
