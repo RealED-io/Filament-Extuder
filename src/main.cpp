@@ -989,11 +989,11 @@ void display_lcd()
 					cursor(1, 1);
 					lcd.print("back");
 					cursor(2, 1);
-					lcd.print("heater A");
+					lcd.print("heater 1");
 					cursor(3, 1);
-					lcd.print("heater B");
+					lcd.print("heater 2");
 					cursor(4, 1);
-					lcd.print("heater C");
+					lcd.print("heater 3");
 					display_static = false;
 				}
 				break;
