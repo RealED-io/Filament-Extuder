@@ -117,6 +117,10 @@ void menuleveler();
 void display_Setter(double *, int, uint8_t, String);
 // void display_Setter_kPID();
 void display_lcd();
+void save_cal(unsigned int, double, unsigned int, double, unsigned int, double);
+void load_cal(unsigned int, double*, unsigned int, double*, unsigned int, double*);
+void save_cal_all();
+void load_cal_all();
 
 void setup()
 {
@@ -204,6 +208,8 @@ void setup()
 
 	STEPPER_RUN();
 	MOTOR_RUN();
+	// save_cal_all();
+	load_cal_all();
 }
 
 void loop()
@@ -458,9 +464,34 @@ void START_STOP()
 	}
 }
 
-void SAVETOEEPROM()
+void save_cal(unsigned int idx_kP, double kP, unsigned int idx_kI, double kI, unsigned int idx_kD, double kD)
 {
-	// EEPROM.update();
+	EEPROM.put(idx_kP, kP);
+	EEPROM.put(idx_kI, kI);
+	EEPROM.put(idx_kD, kD);
+}
+
+void load_cal(unsigned int idx_kP, double* kP, unsigned int idx_kI, double* kI, unsigned int idx_kD, double* kD)
+{
+	EEPROM.get(idx_kP, *kP);
+	EEPROM.get(idx_kI, *kI);
+	EEPROM.get(idx_kD, *kD);
+}
+
+void save_cal_all()
+{
+	save_cal(heaterA.idx_kP, heaterA.kP, heaterA.idx_kI, heaterA.kI, heaterA.idx_kD, heaterA.kD);
+	save_cal(heaterB.idx_kP, heaterB.kP, heaterB.idx_kI, heaterB.kI, heaterB.idx_kD, heaterB.kD);
+	save_cal(heaterC.idx_kP, heaterC.kP, heaterC.idx_kI, heaterC.kI, heaterC.idx_kD, heaterC.kD);
+	save_cal(puller.idx_kP, puller.kP, puller.idx_kI, puller.kI, puller.idx_kD, puller.kD);		
+}
+
+void load_cal_all()
+{
+	load_cal(heaterA.idx_kP, &heaterA.kP, heaterA.idx_kI, &heaterA.kI, heaterA.idx_kD, &heaterA.kD);
+	load_cal(heaterB.idx_kP, &heaterB.kP, heaterB.idx_kI, &heaterB.kI, heaterB.idx_kD, &heaterB.kD);
+	load_cal(heaterC.idx_kP, &heaterC.kP, heaterC.idx_kI, &heaterC.kI, heaterC.idx_kD, &heaterC.kD);
+	load_cal(puller.idx_kP, &puller.kP, puller.idx_kI, &puller.kI, puller.idx_kD, &puller.kD);
 }
 
 void checkPosition()
@@ -1008,7 +1039,7 @@ void display_lcd()
 				switch (menulevel[3])
 				{
 				case 0:
-					selector(4);
+					selector(5);
 					// run only once to save processing time
 					if (display_static)
 					{
@@ -1020,6 +1051,8 @@ void display_lcd()
 						lcd.print("kI");
 						cursor(4, 1);
 						lcd.print("kD");
+						cursor(5, 1);
+						lcd.print("SAVE");
 						cursor(2, 4);
 						lcd.print(heaterA.kP);
 						cursor(3, 4);
@@ -1068,6 +1101,13 @@ void display_lcd()
 					display_Setter(&heaterA.kD, 1, 4, "kD");
 					break;	
 
+				case 5:
+					save_cal(heaterA.idx_kP, heaterA.kP, heaterA.idx_kI, heaterA.kI, heaterA.idx_kD, heaterA.kD);
+					encoder->setPosition(1);
+					menulevel[2] = 0;
+					menulevel[3] = 0;
+					break;
+				
 				default:
 					menulevel[3] = 0;
 					break;	
@@ -1078,7 +1118,7 @@ void display_lcd()
 				switch (menulevel[3])
 				{
 				case 0:
-					selector(4);
+					selector(5);
 					// run only once to save processing time
 					if (display_static)
 					{
@@ -1090,6 +1130,8 @@ void display_lcd()
 						lcd.print("kI");
 						cursor(4, 1);
 						lcd.print("kD");
+						cursor(5, 1);
+						lcd.print("SAVE");
 						cursor(2, 4);
 						lcd.print(heaterB.kP);
 						cursor(3, 4);
@@ -1138,6 +1180,13 @@ void display_lcd()
 					display_Setter(&heaterB.kD, 1, 4, "kD");
 					break;	
 
+				case 5:
+					save_cal(heaterB.idx_kP, heaterB.kP, heaterB.idx_kI, heaterB.kI, heaterB.idx_kD, heaterB.kD);
+					encoder->setPosition(2);
+					menulevel[2] = 0;
+					menulevel[3] = 0;
+					break;
+				
 				default:
 					menulevel[3] = 0;
 					break;	
@@ -1148,7 +1197,7 @@ void display_lcd()
 				switch (menulevel[3])
 				{
 				case 0:
-					selector(4);
+					selector(5);
 					// run only once to save processing time
 					if (display_static)
 					{
@@ -1160,6 +1209,8 @@ void display_lcd()
 						lcd.print("kI");
 						cursor(4, 1);
 						lcd.print("kD");
+						cursor(5, 1);
+						lcd.print("SAVE");
 						cursor(2, 4);
 						lcd.print(heaterC.kP);
 						cursor(3, 4);
@@ -1208,6 +1259,13 @@ void display_lcd()
 					display_Setter(&heaterC.kD, 1, 4, "kD");
 					break;	
 
+				case 5:
+					save_cal(heaterC.idx_kP, heaterC.kP, heaterC.idx_kI, heaterC.kI, heaterC.idx_kD, heaterC.kD);
+					encoder->setPosition(3);
+					menulevel[2] = 0;
+					menulevel[3] = 0;
+					break;
+				
 				default:
 					menulevel[3] = 0;
 					break;	
@@ -1224,7 +1282,7 @@ void display_lcd()
 			switch (menulevel[2])
 			{
 			case 0:
-				selector(4);
+				selector(5);
 				// run only once to save processing time
 				if (display_static)
 				{
@@ -1236,6 +1294,8 @@ void display_lcd()
 					lcd.print("kI");
 					cursor(4, 1);
 					lcd.print("kD");
+					cursor(5, 1);
+					lcd.print("SAVE");
 					cursor(2, 4);
 					lcd.print(puller.kP);
 					cursor(3, 4);
@@ -1284,6 +1344,13 @@ void display_lcd()
 				display_Setter(&puller.kD, 10, 4, "kD");
 				break;	
 
+			case 5:
+				save_cal(puller.idx_kP, puller.kP, puller.idx_kI, puller.kI, puller.idx_kD, puller.kD);
+				encoder->setPosition(2);
+				menulevel[1] = 0;
+				menulevel[2] = 0;
+				break;
+			
 			default:
 				menulevel[2] = 0;
 				break;	
@@ -1313,7 +1380,7 @@ void display_lcd()
 				// lcd.print("RPM Control");
 				lcd.print("Serial logging");
 				cursor(4, 1);
-				lcd.print("Save to EEPROM");
+				lcd.print("Restore Calibration");
 
 				check_mark(TEST_MODE, 2);
 				// check_mark(control_RPM, 3);
@@ -1336,19 +1403,19 @@ void display_lcd()
 			break;
 
 		case 3: // settings/serial logging
-			// control_RPM = !control_RPM;
-			// display_static = true;
-			// menulevel[1] = 0;
 			SERIAL_LOGGING = !SERIAL_LOGGING;
 			display_static = true;
 			menulevel[1] = 0;
 			break;
 
 		case 4: // settings/save to EEPROM
+			heaterA.Set_kPID(450, 20, 5);
+			heaterB.Set_kPID(450, 20, 5);
+			heaterC.Set_kPID(450, 20, 5);
+			puller.Set_kPID(100000, 5000, 500);
+			save_cal_all();
+			menulevel[0] = 0;
 			menulevel[1] = 0;
-			// SERIAL_LOGGING = !SERIAL_LOGGING;
-			// display_static = true;
-			// menulevel[1] = 0;
 			break;
 
 		default:
