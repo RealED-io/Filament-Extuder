@@ -9,7 +9,8 @@
 
 class ACPID{
     public:
-        ACPID(float, unsigned int, unsigned int, unsigned int, bool);
+        ACPID(bool);
+        // ACPID(float, unsigned int, unsigned int, unsigned int, bool);
 
         bool PID_Direction;     //true for reversed, false for direct
         bool PID_I_reset = true;
@@ -36,9 +37,11 @@ class ACPID{
         unsigned int Delay_Min;
         unsigned int Delay_Max;
 
+        void Set_setpoint(float);
         void Compute(unsigned int);
         void Range(unsigned int, unsigned int);
-        void Set_kPID(float, float, float);
+        void Set_kPID(float, float, float, bool);
+        void EEPROM_idx(unsigned int, unsigned int, unsigned int);
         // void Set_EEPROM_idx(unsigned int, unsigned int, unsigned int);
 };
 

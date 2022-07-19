@@ -12,15 +12,9 @@
   // 6 TRACE
 #endif
 
-ACPID::ACPID(float set, unsigned int idxP, unsigned int idxI, unsigned int idxD, bool direction)
+ACPID::ACPID(bool direction)
 {
-    Setpoint = set;
-
     PID_Direction = direction;
-
-    idx_kP = idxP;
-    idx_kI = idxI;
-    idx_kD = idxD;
 }
 
 void ACPID::Range(unsigned int min, unsigned int max)
@@ -36,6 +30,11 @@ void ACPID::Range(unsigned int min, unsigned int max)
     {
         PID_I = Delay_Max;
     }
+}
+
+void ACPID::Set_setpoint(float val)
+{
+    Setpoint = val;
 }
 
 void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in ms
@@ -115,8 +114,10 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
 
 }
 
-void ACPID::Set_kPID(float constP, float constI, float constD)
+void ACPID::Set_kPID(float constP, float constI, float constD, bool direction)
 {
+    PID_Direction = direction;
+
     if(PID_Direction)       // DIRECT
     {
         kP = constP;
@@ -129,6 +130,13 @@ void ACPID::Set_kPID(float constP, float constI, float constD)
         kI = (0 - constI);
         kD = (0 - constD);
     }
+}
+
+void ACPID::EEPROM_idx(unsigned int index_kP, unsigned int index_kI, unsigned int index_kD)
+{
+    idx_kP = index_kP;
+    idx_kI = index_kI;
+    idx_kD = index_kD;
 }
 
 // void ACPID::Set_EEPROM_idx(unsigned int idxP, unsigned int idxI, unsigned int idxD)

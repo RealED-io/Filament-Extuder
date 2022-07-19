@@ -89,10 +89,13 @@ float dia_size_cal[6] = {3, 2.00, 1.60, 1.20, 1.00, 0};
 		// {1023, 0} // safety
 
 // classes init
-// set_temp, kP, kI, kD, reversed direction
-ACPID heaterA(0, 4, 8, 12, REVERSE);
-ACPID heaterB(0, 16, 20, 24, REVERSE);
-ACPID heaterC(0, 28, 32, 36, REVERSE);
+// // set_temp, index kP, kI, kD, reversed direction
+// ACPID heaterA(0, 4, 8, 12, REVERSE);
+// ACPID heaterB(0, 16, 20, 24, REVERSE);
+// ACPID heaterC(0, 28, 32, 36, REVERSE);
+ACPID heaterA(REVERSE);
+ACPID heaterB(REVERSE);
+ACPID heaterC(REVERSE);
 // ACPID heaterC(0, 450, 20, 5, REVERSE); // original code
 
 MAX6675 thermoA(SPI_CLOCK, SPI_thermoA, SPI_MISO);
@@ -102,7 +105,8 @@ MAX6675 thermoC(SPI_CLOCK, SPI_thermoC, SPI_MISO);
 RotaryEncoder *encoder = nullptr;
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
-ACPID puller(1.9, 40, 44, 48, DIRECT);
+// ACPID puller(1.9, 40, 44, 48, DIRECT);
+ACPID puller(DIRECT);
 // ACPID puller(1.9, 10, 10, 5, DIRECT);
 
 // function declarations
@@ -187,18 +191,32 @@ void setup()
 	attachInterrupt(digitalPinToInterrupt(ROTARY_1B), checkPosition, CHANGE);
 
 	// PID settings
-	heaterA.Set_kPID(450, 20, 5);
-	heaterB.Set_kPID(450, 20, 5);
-	heaterC.Set_kPID(450, 20, 5);
+	heaterA.Set_setpoint(0);
+	heaterB.Set_setpoint(0);
+	heaterC.Set_setpoint(0);
+
+	heaterA.Set_kPID(450, 20, 5, REVERSE);
+	heaterB.Set_kPID(450, 20, 5, REVERSE);
+	heaterC.Set_kPID(450, 20, 5, REVERSE);
+
 	heaterA.Range(pulse_delay_min, pulse_delay_max);
 	heaterB.Range(pulse_delay_min, pulse_delay_max);
 	heaterC.Range(pulse_delay_min, pulse_delay_max);
+
 	heaterA.PID_I_disableatError = 30;
 	heaterB.PID_I_disableatError = 30;
 	heaterC.PID_I_disableatError = 30;
-	puller.Set_kPID(100000, 5000, 500);
+
+	puller.Set_setpoint(1.75);
+	puller.Set_kPID(100000, 5000, 500, DIRECT);
 	puller.Range(motor_pulse_delay_min, motor_pulse_delay_max);
 	puller.PID_I_reset = true;
+
+	// EEPROM INDEX
+	heaterA.EEPROM_idx(4, 8, 12);
+	heaterB.EEPROM_idx(16, 20, 24);
+	heaterC.EEPROM_idx(28, 32, 36);
+	puller.EEPROM_idx(40, 44, 48);
 
 	// hall sensor
 	pinMode(HALL_SENSOR_PIN, INPUT);
@@ -1418,10 +1436,10 @@ void display_lcd()
 			break;
 
 		case 4: // settings/save to EEPROM
-			heaterA.Set_kPID(450, 20, 5);
-			heaterB.Set_kPID(450, 20, 5);
-			heaterC.Set_kPID(450, 20, 5);
-			puller.Set_kPID(100000, 5000, 500);
+			heaterA.Set_kPID(450, 20, 5, REVERSE);
+			heaterB.Set_kPID(450, 20, 5, REVERSE);
+			heaterC.Set_kPID(450, 20, 5, REVERSE);
+			puller.Set_kPID(100000, 5000, 500, DIRECT);
 			save_cal_all();
 			menulevel[0] = 0;
 			menulevel[1] = 0;
