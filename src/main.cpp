@@ -114,7 +114,7 @@ void check_mark(bool, uint8_t);
 void cursor(uint8_t, uint8_t);
 int8_t selector(int8_t);
 void menuleveler();
-void display_Setter(double *, uint8_t, String);
+void display_Setter(double *, int, uint8_t, String);
 // void display_Setter_kPID();
 void display_lcd();
 
@@ -657,7 +657,7 @@ void menuleveler()
 }
 
 
-void display_Setter(double *value, uint8_t printlevel, String label)
+void display_Setter(double *value, int multiplier, uint8_t printlevel, String label)
 {
 	if (display_dynamic)
 	{
@@ -672,7 +672,7 @@ void display_Setter(double *value, uint8_t printlevel, String label)
 		lcd.print(label);
 		encoder->getDirection(); // resets value of direction before using it to set
 	}
-	*value += int(encoder->getDirection());
+	*value += (int(encoder->getDirection()) * multiplier);
 	display_static = false;
 }
 
@@ -768,7 +768,7 @@ void display_lcd()
 					break;
 				}
 				// display_Set_heaterA();
-				display_Setter(&heaterA.Setpoint, 2, "T1");
+				display_Setter(&heaterA.Setpoint, 1, 2, "T1");
 				break;
 
 			case 3: // extrude/set temp/T2
@@ -779,7 +779,7 @@ void display_lcd()
 					break;
 				}
 				// display_Set_heaterB();
-				display_Setter(&heaterB.Setpoint, 3, "T2");
+				display_Setter(&heaterB.Setpoint, 1, 3, "T2");
 				break;
 
 			case 4: // extrude/set temp/T3
@@ -790,7 +790,7 @@ void display_lcd()
 					break;
 				}
 				// display_Set_heaterC();
-				display_Setter(&heaterC.Setpoint, 4, "T3");
+				display_Setter(&heaterC.Setpoint, 1, 4, "T3");
 				break;
 
 			default:
@@ -890,7 +890,7 @@ void display_lcd()
 					break;
 				}
 				// display_Set_heaterA();
-				display_Setter(&heaterA.Setpoint, 2, "T1");
+				display_Setter(&heaterA.Setpoint, 1, 2, "T1");
 				break;
 
 			case 3: // extrude/start/T2
@@ -901,7 +901,7 @@ void display_lcd()
 					break;
 				}
 				// display_Set_heaterB();
-				display_Setter(&heaterB.Setpoint, 3, "T2");
+				display_Setter(&heaterB.Setpoint, 1, 3, "T2");
 				break;
 
 			case 4: // extrude/start/T3
@@ -912,7 +912,7 @@ void display_lcd()
 					break;
 				}
 				// display_Set_heaterC();
-				display_Setter(&heaterC.Setpoint, 4, "T3");
+				display_Setter(&heaterC.Setpoint, 1, 4, "T3");
 				break;
 
 			case 5: // extrude/start/run motor
@@ -1003,7 +1003,7 @@ void display_lcd()
 				menulevel[2] = 0;
 				break;
 
-			case 2:
+			case 2:	// calibrate/heater PID/heater A
 				switch (menulevel[3])
 				{
 				case 0:
@@ -1042,7 +1042,7 @@ void display_lcd()
 						break;
 					}
 					// display_Set_heaterC();
-					display_Setter(&heaterA.kP, 2, "kP");
+					display_Setter(&heaterA.kP, 1, 2, "kP");
 					break;	
 
 				case 3:	
@@ -1053,7 +1053,7 @@ void display_lcd()
 						break;
 					}
 					// display_Set_heaterC();
-					display_Setter(&heaterA.kI, 3, "kI");
+					display_Setter(&heaterA.kI, 1, 3, "kI");
 					break;	
 
 				case 4:	
@@ -1064,7 +1064,147 @@ void display_lcd()
 						break;
 					}
 					// display_Set_heaterC();
-					display_Setter(&heaterA.kD, 4, "kD");
+					display_Setter(&heaterA.kD, 1, 4, "kD");
+					break;	
+
+				default:
+					menulevel[3] = 0;
+					break;	
+				}
+				break;
+			
+			case 3: // calibrate/heater PID/Heater B
+				switch (menulevel[3])
+				{
+				case 0:
+					selector(4);
+					// run only once to save processing time
+					if (display_static)
+					{
+						cursor(1, 1);
+						lcd.print("back");
+						cursor(2, 1);
+						lcd.print("kP");
+						cursor(3, 1);
+						lcd.print("kI");
+						cursor(4, 1);
+						lcd.print("kD");
+						cursor(2, 4);
+						lcd.print(heaterB.kP);
+						cursor(3, 4);
+						lcd.print(heaterB.kI);
+						cursor(4, 4);
+						lcd.print(heaterB.kD);
+						display_static = false;
+					}
+					break;
+				
+				case 1: // calibrate/heater PID/heater A/back
+					menulevel[2] = 0;
+					menulevel[3] = 0;
+					break;	
+
+				case 2:	
+					if (!display_valuesetter)
+					{
+						menulevel[3] = 0;
+						encoder->setPosition(1);
+						break;
+					}
+					// display_Set_heaterC();
+					display_Setter(&heaterB.kP, 1, 2, "kP");
+					break;	
+
+				case 3:	
+					if (!display_valuesetter)
+					{
+						menulevel[3] = 0;
+						encoder->setPosition(2);
+						break;
+					}
+					// display_Set_heaterC();
+					display_Setter(&heaterB.kI, 1, 3, "kI");
+					break;	
+
+				case 4:	
+					if (!display_valuesetter)
+					{
+						menulevel[3] = 0;
+						encoder->setPosition(3);
+						break;
+					}
+					// display_Set_heaterC();
+					display_Setter(&heaterB.kD, 1, 4, "kD");
+					break;	
+
+				default:
+					menulevel[3] = 0;
+					break;	
+				}
+				break;
+
+			case 4:	// calibrate/heater PID/Heater C
+				switch (menulevel[3])
+				{
+				case 0:
+					selector(4);
+					// run only once to save processing time
+					if (display_static)
+					{
+						cursor(1, 1);
+						lcd.print("back");
+						cursor(2, 1);
+						lcd.print("kP");
+						cursor(3, 1);
+						lcd.print("kI");
+						cursor(4, 1);
+						lcd.print("kD");
+						cursor(2, 4);
+						lcd.print(heaterC.kP);
+						cursor(3, 4);
+						lcd.print(heaterC.kI);
+						cursor(4, 4);
+						lcd.print(heaterC.kD);
+						display_static = false;
+					}
+					break;
+				
+				case 1: // calibrate/heater PID/heater A/back
+					menulevel[2] = 0;
+					menulevel[3] = 0;
+					break;	
+
+				case 2:	
+					if (!display_valuesetter)
+					{
+						menulevel[3] = 0;
+						encoder->setPosition(1);
+						break;
+					}
+					// display_Set_heaterC();
+					display_Setter(&heaterC.kP, 1, 2, "kP");
+					break;	
+
+				case 3:	
+					if (!display_valuesetter)
+					{
+						menulevel[3] = 0;
+						encoder->setPosition(2);
+						break;
+					}
+					// display_Set_heaterC();
+					display_Setter(&heaterC.kI, 1, 3, "kI");
+					break;	
+
+				case 4:	
+					if (!display_valuesetter)
+					{
+						menulevel[3] = 0;
+						encoder->setPosition(3);
+						break;
+					}
+					// display_Set_heaterC();
+					display_Setter(&heaterC.kD, 1, 4, "kD");
 					break;	
 
 				default:
@@ -1078,6 +1218,77 @@ void display_lcd()
 				break;
 			}
 			break;
+
+		case 3:
+			switch (menulevel[2])
+			{
+			case 0:
+				selector(4);
+				// run only once to save processing time
+				if (display_static)
+				{
+					cursor(1, 1);
+					lcd.print("back");
+					cursor(2, 1);
+					lcd.print("kP");
+					cursor(3, 1);
+					lcd.print("kI");
+					cursor(4, 1);
+					lcd.print("kD");
+					cursor(2, 4);
+					lcd.print(puller.kP);
+					cursor(3, 4);
+					lcd.print(puller.kI);
+					cursor(4, 4);
+					lcd.print(puller.kD);
+					display_static = false;
+				}
+				break;
+			
+			case 1: // calibrate/heater PID/heater A/back
+				menulevel[1] = 0;
+				menulevel[2] = 0;
+				break;	
+
+			case 2:	
+				if (!display_valuesetter)
+				{
+					menulevel[2] = 0;
+					encoder->setPosition(1);
+					break;
+				}
+				// display_Set_heaterC();
+				display_Setter(&puller.kP, 100, 2, "kP");
+				break;	
+
+			case 3:	
+				if (!display_valuesetter)
+				{
+					menulevel[2] = 0;
+					encoder->setPosition(2);
+					break;
+				}
+				// display_Set_heaterC();
+				display_Setter(&puller.kI, 10, 3, "kI");
+				break;	
+
+			case 4:	
+				if (!display_valuesetter)
+				{
+					menulevel[2] = 0;
+					encoder->setPosition(3);
+					break;
+				}
+				// display_Set_heaterC();
+				display_Setter(&puller.kD, 10, 4, "kD");
+				break;	
+
+			default:
+				menulevel[2] = 0;
+				break;	
+			}
+			break;
+
 		default:
 			menulevel[1] = 0;
 			break;
