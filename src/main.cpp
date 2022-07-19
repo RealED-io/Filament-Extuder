@@ -853,7 +853,7 @@ void display_lcd()
 					{
 						lcd.print("Stepr OFF");
 					}
-					lcd.print("RPM");
+					// lcd.print("RPM");
 					cursor(7, 1);
 					lcd.print("Size");
 					cursor(8, 1);
