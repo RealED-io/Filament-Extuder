@@ -115,10 +115,7 @@ void cursor(uint8_t, uint8_t);
 int8_t selector(int8_t);
 void menuleveler();
 void display_Setter(double *, uint8_t, String);
-void display_Set_heaterA();
-void display_Set_heaterB();
-void display_Set_heaterC();
-void display_Menu_2_3();
+// void display_Setter_kPID();
 void display_lcd();
 
 void setup()
@@ -1074,11 +1071,13 @@ void display_lcd()
 					menulevel[3] = 0;
 					break;	
 				}
+				break;
 
 			default:
 				menulevel[2] = 0;
 				break;
 			}
+			break;
 		default:
 			menulevel[1] = 0;
 			break;
