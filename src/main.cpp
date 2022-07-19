@@ -397,7 +397,7 @@ float read_RPM()
 		Tachotime = 0;
 		// motor_run = false;
 	}		
-	float ret = 60000 / (2 * Tachotime);
+	float ret = 60000 / (4 * Tachotime);
 	RPM = ret;
 	return ret; // 1000 ms/s * 60 s  / ms
 }
