@@ -354,12 +354,12 @@ float convert2dia(float in)
 
 		// REPLACE THESE WITH YOUR OWN READINGS AND DRILL BIT DIAMETERS
 
-		{0, 3},		 // safety
-		{600, 2.00}, // 2mm drill bit
-		{692, 1.6},	 // 1.5mm
-		{883, 1.2},	 // 1.27mm
-		{ 1000  , 1}, // 1mm
-		{1023, 0} // safety
+		{dia_analog_val[0], dia_size_cal[0]},		// safety
+		{dia_analog_val[1], dia_size_cal[1]}, 		// 2mm drill bit
+		{dia_analog_val[2], dia_size_cal[2]},	 	// 1.5mm
+		{dia_analog_val[3], dia_size_cal[3]},		// 1.27mm
+		{dia_analog_val[4], dia_size_cal[4]}, 		// 1mm
+		{dia_analog_val[5], dia_size_cal[5]} 		// safety
 	};
 	byte i;
 	float out;
