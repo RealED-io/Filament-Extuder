@@ -132,8 +132,9 @@ void ACPID::Set_kPID(float constP, float constI, float constD, bool direction)
     }
 }
 
-void ACPID::EEPROM_idx(unsigned int index_kP, unsigned int index_kI, unsigned int index_kD)
+void ACPID::EEPROM_idx(unsigned int index_Set, unsigned int index_kP, unsigned int index_kI, unsigned int index_kD)
 {
+    idx_Set = index_Set;
     idx_kP = index_kP;
     idx_kI = index_kI;
     idx_kD = index_kD;

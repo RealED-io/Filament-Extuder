@@ -82,8 +82,8 @@ float dia_analog_val[6] = {};
 float dia_size_cal[6] = {};
 // float dia_analog_val[6] = {0, 600, 622, 692, 883, 1023};
 // float dia_size_cal[6] = {3, 2.00, 1.75, 1.60, 1.20, 0};
-uint8_t dia_analog_val_idx[6] = {52, 56, 60, 64, 68, 72};
-uint8_t dia_size_cal_idx[6] = {76, 80, 84, 88, 92, 96};
+uint8_t dia_analog_val_idx[6] = {68, 72, 76, 80, 84, 88};
+uint8_t dia_size_cal_idx[6] = {92, 96, 100, 104, 108, 112};
 
 // classes init
 // // set_temp, index kP, kI, kD, reversed direction
@@ -124,9 +124,11 @@ void check_mark(bool, uint8_t);
 void cursor(uint8_t, uint8_t);
 int8_t selector(int8_t);
 void menuleveler();
-void display_Setter(float *, int, uint8_t, String);
+void display_Setter(float *, float, uint8_t, String);
 // void display_Setter_kPID();
 void display_lcd();
+void save_set();
+void load_set();
 void save_cal(unsigned int, float, unsigned int, float, unsigned int, float);
 void load_cal(unsigned int, float*, unsigned int, float*, unsigned int, float*);
 void save_cal_all();
@@ -210,12 +212,12 @@ void setup()
 	puller.PID_I_reset = true;
 
 	// EEPROM INDEX
-	heaterA.EEPROM_idx(4, 8, 12);
-	heaterB.EEPROM_idx(16, 20, 24);
-	heaterC.EEPROM_idx(28, 32, 36);
-	puller.EEPROM_idx(40, 44, 48);
-	// uint8_t dia_analog_val_idx[6] = {52, 56, 60, 64, 68, 72};
-	// uint8_t dia_size_cal_idx[6] = {76, 80, 84, 88, 92, 96};
+	heaterA.EEPROM_idx(4, 8, 12, 16);
+	heaterB.EEPROM_idx(20, 24, 28, 32);
+	heaterC.EEPROM_idx(36, 40, 44, 48);
+	puller.EEPROM_idx(52, 56, 60, 64);
+	// uint8_t dia_analog_val_idx[6] = {68, 72, 76, 80, 84, 88};
+	// uint8_t dia_size_cal_idx[6] = {92, 96, 100, 104, 108, 112};
 
 	// hall sensor
 	pinMode(HALL_SENSOR_PIN, INPUT);
@@ -223,19 +225,37 @@ void setup()
 	pinMode(MOTOR_STEP, OUTPUT);
 	pinMode(MOTOR_PULSE, OUTPUT);
 
-	// end lcd startup
+
+	STEPPER_RUN();
+	MOTOR_RUN();
+
+	// load EEPROM
+	// save_cal_all();
+	load_set();
+	load_cal_all();	
+
+	// end lcd startup	
 	lcd.clear();
 	cursor(2, 6);
 	lcd.print("FILAMENT");
 	cursor(3, 6);
 	lcd.print("EXTRUDER");
-	delay(3000);
+	delay(2000);
+
 	lcd.clear();
 
-	STEPPER_RUN();
-	MOTOR_RUN();
-	// save_cal_all();
-	load_cal_all();
+	cursor(2, 6);
+	lcd.print("BSME 4-2");
+	cursor(3, 5);
+	lcd.print("2018  2022");
+	delay(2000);
+
+	// cursor()
+	cursor(8, 1);
+	lcd.print("pls po ty");
+	delay(1000);
+
+	lcd.clear();
 }
 
 void loop()
@@ -492,6 +512,22 @@ void START_STOP()
 	}
 }
 
+void save_set()
+{
+	EEPROM.put(heaterA.idx_Set, heaterA.Setpoint);
+	EEPROM.put(heaterB.idx_Set, heaterB.Setpoint);
+	EEPROM.put(heaterC.idx_Set, heaterC.Setpoint);
+	EEPROM.put(puller.idx_Set, puller.Setpoint);
+}
+
+void load_set()
+{
+	EEPROM.get(heaterA.idx_Set, heaterA.Setpoint);
+	EEPROM.get(heaterB.idx_Set, heaterB.Setpoint);
+	EEPROM.get(heaterC.idx_Set, heaterC.Setpoint);
+	EEPROM.get(puller.idx_Set, puller.Setpoint);
+}
+
 void save_cal(unsigned int idx_kP, float kP, unsigned int idx_kI, float kI, unsigned int idx_kD, float kD)
 {
 	EEPROM.put(idx_kP, kP);
@@ -736,7 +772,7 @@ void menuleveler()
 }
 
 
-void display_Setter(float *value, int multiplier, uint8_t printlevel, String label)
+void display_Setter(float *value, float multiplier, uint8_t printlevel, String label)
 {
 	if (display_dynamic)
 	{
@@ -783,32 +819,27 @@ void display_lcd()
 	switch (menulevel[0])
 	{
 	case 0: // Main Menu
-		// display_static = true;
-		// display_MainMenu();
 		selector(4);
-		// run every poll
-		cursor(1, 1);
-		lcd.print(oldposition);
-
 		// run only once to save processing time
 		if (display_static)
 		{
 
-			cursor(2, 1);
+			cursor(1, 1);
 			lcd.print("Extrude");
-			cursor(3, 1);
+			cursor(2, 1);
 			lcd.print("Calibrate");
-			cursor(4, 1);
+			cursor(3, 1);
 			lcd.print("Settings");
+			cursor(4, 1);
+			lcd.print("About");
 			display_static = false;
 		}
 		break;
 
-	case 2: // extrude
+	case 1: // extrude
 		switch (menulevel[1])
 		{
 		case 0: // extrude/
-			// display_Menu_2();
 			selector(3);
 			// run only once to save processing time
 			if (display_static)
@@ -833,7 +864,7 @@ void display_lcd()
 			switch (menulevel[2])
 			{
 			case 0: // extrude/set temp/
-				selector(4);
+				selector(8);
 				// display_Menu_2_2();
 				if (display_static)
 				{
@@ -845,6 +876,12 @@ void display_lcd()
 					lcd.print("T2");
 					cursor(4, 1);
 					lcd.print("T3");
+					cursor(6, 1);
+					lcd.print("Size");
+					cursor(7, 1);
+					lcd.print("SAVE");
+					cursor(8, 1);
+					lcd.print("RESET");
 					// set temps
 					cursor(2, 4);
 					lcd.print(heaterA.Setpoint);
@@ -852,6 +889,8 @@ void display_lcd()
 					lcd.print(heaterB.Setpoint);
 					cursor(4, 4);
 					lcd.print(heaterC.Setpoint);
+					cursor(6, 6);
+					lcd.print(puller.Setpoint);
 					display_static = false;
 				}
 				break;
@@ -893,6 +932,29 @@ void display_lcd()
 				}
 				// display_Set_heaterC();
 				display_Setter(&heaterC.Setpoint, 1, 4, "T3");
+				break;
+
+			case 6: // extrude/set temp/Size
+				if (!display_valuesetter)
+				{
+					menulevel[2] = 0;
+					encoder->setPosition(5);
+					break;
+				}
+				// display_Set_heaterC();
+				display_Setter(&puller.Setpoint, 0.01, 6, "Size");
+				break;
+
+			case 7:
+				save_set();
+				encoder->setPosition(1);
+				menulevel[1] = 0;
+				menulevel[2] = 0;
+				break;
+			
+			case 8:
+				load_set();
+				menulevel[2] = 0;
 				break;
 
 			default:
@@ -1053,11 +1115,10 @@ void display_lcd()
 		}
 		break;
 
-	case 3: // calibrate
+	case 2: // calibrate
 		switch (menulevel[1])
 		{
 		case 0:
-			// display_Menu_3();
 			selector(4);
 			// run only once to save processing time
 			if (display_static)
@@ -1077,7 +1138,6 @@ void display_lcd()
 		case 1: // calibrate/back
 			menulevel[0] = 0;
 			menulevel[1] = 0;
-			// display_MainMenu();
 			break;
 
 		case 2:	// calibrate/heater PID
@@ -1183,7 +1243,7 @@ void display_lcd()
 				case 6:
 					load_cal(heaterA.idx_kP, &heaterA.kP, heaterA.idx_kI, &heaterA.kI, heaterA.idx_kD, &heaterA.kD);
 					encoder->setPosition(1);
-					menulevel[2] = 0;
+					// menulevel[2] = 0;
 					menulevel[3] = 0;
 					break;			
 
@@ -1271,7 +1331,7 @@ void display_lcd()
 				case 6:
 					load_cal(heaterB.idx_kP, &heaterB.kP, heaterB.idx_kI, &heaterB.kI, heaterB.idx_kD, &heaterB.kD);
 					encoder->setPosition(2);
-					menulevel[2] = 0;
+					// menulevel[2] = 0;
 					menulevel[3] = 0;
 					break;
 				
@@ -1359,7 +1419,7 @@ void display_lcd()
 				case 6:
 					load_cal(heaterC.idx_kP, &heaterC.kP, heaterC.idx_kI, &heaterC.kI, heaterC.idx_kD, &heaterC.kD);
 					encoder->setPosition(3);
-					menulevel[2] = 0;
+					// menulevel[2] = 0;
 					menulevel[3] = 0;
 					break;
 
@@ -1453,7 +1513,7 @@ void display_lcd()
 			case 6:
 				load_cal(puller.idx_kP, &puller.kP, puller.idx_kI, &puller.kI, puller.idx_kD, &puller.kD);
 				encoder->setPosition(2);
-				menulevel[1] = 0;
+				// menulevel[1] = 0;
 				menulevel[2] = 0;
 				break;
 
@@ -1563,11 +1623,10 @@ void display_lcd()
 		}
 		break;
 
-	case 4: // settings
+	case 3: // settings
 		switch (menulevel[1])
 		{
 		case 0: // settings/
-			// display_Menu_4();
 			selector(4);
 			// run only once to save processing time
 			if (display_static)
@@ -1580,7 +1639,7 @@ void display_lcd()
 				// lcd.print("RPM Control");
 				lcd.print("Serial logging");
 				cursor(4, 1);
-				lcd.print("Restore Calibration");
+				lcd.print("Restore defaults");
 
 				check_mark(TEST_MODE, 2);
 				// check_mark(control_RPM, 3);
@@ -1609,6 +1668,12 @@ void display_lcd()
 			break;
 
 		case 4: // settings/restore defaults
+			encoder->setPosition(2);
+			heaterA.Set_setpoint(0);
+			heaterB.Set_setpoint(0);
+			heaterC.Set_setpoint(0);
+			puller.Set_setpoint(1.75);
+			save_set();
 			heaterA.Set_kPID(450, 20, 5, REVERSE);
 			heaterB.Set_kPID(450, 20, 5, REVERSE);
 			heaterC.Set_kPID(450, 20, 5, REVERSE);
@@ -1627,6 +1692,39 @@ void display_lcd()
 			break;
 
 		default:
+			menulevel[1] = 0;
+			break;
+		}
+		break;
+
+	case 4:
+		switch (menulevel[1])
+		{
+		case 0:
+			if (display_static)
+			{
+				// cursor(1, 0);
+				// lcd.print("BSME 4-2");
+				cursor(1, 7);
+				lcd.print("FilEx");
+				cursor(2, 1);
+				lcd.print("Nichole");
+				cursor(3, 1);
+				lcd.print("bitsuki");
+				cursor(4, 2);
+				lcd.print("D'Aems");
+				cursor(6, 0);
+				lcd.print("densanity");
+				cursor(7, 1);
+				lcd.print("RealED");
+				cursor(8, 1);
+				lcd.print("alonyx");
+				display_static = false;
+			}			
+			break;
+
+		default:
+			menulevel[0] = 0;
 			menulevel[1] = 0;
 			break;
 		}

@@ -22,6 +22,7 @@ class ACPID{
         float kI;
         float kD;
 
+        unsigned int idx_Set;
         unsigned int idx_kP;
         unsigned int idx_kI;
         unsigned int idx_kD;
@@ -41,7 +42,7 @@ class ACPID{
         void Compute(unsigned int);
         void Range(unsigned int, unsigned int);
         void Set_kPID(float, float, float, bool);
-        void EEPROM_idx(unsigned int, unsigned int, unsigned int);
+        void EEPROM_idx(unsigned int, unsigned int, unsigned int, unsigned int);
         // void Set_EEPROM_idx(unsigned int, unsigned int, unsigned int);
 };
 
