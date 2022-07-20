@@ -78,15 +78,12 @@ uint8_t selectorButton = 0;
 static int oldposition;
 uint8_t menulevel[5] = {0, 0, 0, 0, 0};
 String RPM;
-float dia_analog_val[6] = {0, 600, 692, 883, 1000, 1023};
-float dia_size_cal[6] = {3, 2.00, 1.60, 1.20, 1.00, 0};
-
-		// {0, 3},		 // safety
-		// {600, 2.00}, // 2mm drill bit
-		// {692, 1.6},	 // 1.5mm
-		// {883, 1.2},	 // 1.27mm
-		// { 1000  , 1}, // 1mm
-		// {1023, 0} // safety
+float dia_analog_val[6] = {};
+float dia_size_cal[6] = {};
+// float dia_analog_val[6] = {0, 600, 622, 692, 883, 1023};
+// float dia_size_cal[6] = {3, 2.00, 1.75, 1.60, 1.20, 0};
+uint8_t dia_analog_val_idx[6] = {52, 56, 60, 64, 68, 72};
+uint8_t dia_size_cal_idx[6] = {76, 80, 84, 88, 92, 96};
 
 // classes init
 // // set_temp, index kP, kI, kD, reversed direction
@@ -217,6 +214,8 @@ void setup()
 	heaterB.EEPROM_idx(16, 20, 24);
 	heaterC.EEPROM_idx(28, 32, 36);
 	puller.EEPROM_idx(40, 44, 48);
+	// uint8_t dia_analog_val_idx[6] = {52, 56, 60, 64, 68, 72};
+	// uint8_t dia_size_cal_idx[6] = {76, 80, 84, 88, 92, 96};
 
 	// hall sensor
 	pinMode(HALL_SENSOR_PIN, INPUT);
@@ -374,9 +373,9 @@ float convert2dia(float in)
 
 		{dia_analog_val[0], dia_size_cal[0]},		// safety
 		{dia_analog_val[1], dia_size_cal[1]}, 		// 2mm drill bit
-		{dia_analog_val[2], dia_size_cal[2]},	 	// 1.5mm
-		{dia_analog_val[3], dia_size_cal[3]},		// 1.27mm
-		{dia_analog_val[4], dia_size_cal[4]}, 		// 1mm
+		{dia_analog_val[2], dia_size_cal[2]},	 	// 1.75 mm
+		{dia_analog_val[3], dia_size_cal[3]},		// 1.6 mm
+		{dia_analog_val[4], dia_size_cal[4]}, 		// 1.2 mm
 		{dia_analog_val[5], dia_size_cal[5]} 		// safety
 	};
 	byte i;
@@ -505,12 +504,31 @@ void load_cal(unsigned int idx_kP, float* kP, unsigned int idx_kI, float* kI, un
 	EEPROM.get(idx_kD, *kD);
 }
 
+void save_cal_sizesensor()
+{
+	for (uint8_t i = 0; i < 6; i++)
+	{
+		EEPROM.put(dia_analog_val_idx[i], dia_analog_val[i]);
+		EEPROM.put(dia_size_cal_idx[i], dia_size_cal[i]);
+	}
+}
+
+void load_cal_sizesensor()
+{
+	for (uint8_t i = 0; i < 6; i++)
+	{
+		EEPROM.get(dia_analog_val_idx[i], dia_analog_val[i]);
+		EEPROM.get(dia_size_cal_idx[i], dia_size_cal[i]);
+	}
+}
+
 void save_cal_all()
 {
 	save_cal(heaterA.idx_kP, heaterA.kP, heaterA.idx_kI, heaterA.kI, heaterA.idx_kD, heaterA.kD);
 	save_cal(heaterB.idx_kP, heaterB.kP, heaterB.idx_kI, heaterB.kI, heaterB.idx_kD, heaterB.kD);
 	save_cal(heaterC.idx_kP, heaterC.kP, heaterC.idx_kI, heaterC.kI, heaterC.idx_kD, heaterC.kD);
 	save_cal(puller.idx_kP, puller.kP, puller.idx_kI, puller.kI, puller.idx_kD, puller.kD);		
+	save_cal_sizesensor();
 }
 
 void load_cal_all()
@@ -519,6 +537,7 @@ void load_cal_all()
 	load_cal(heaterB.idx_kP, &heaterB.kP, heaterB.idx_kI, &heaterB.kI, heaterB.idx_kD, &heaterB.kD);
 	load_cal(heaterC.idx_kP, &heaterC.kP, heaterC.idx_kI, &heaterC.kI, heaterC.idx_kD, &heaterC.kD);
 	load_cal(puller.idx_kP, &puller.kP, puller.idx_kI, &puller.kI, puller.idx_kD, &puller.kD);
+	load_cal_sizesensor();
 }
 
 void checkPosition()
@@ -734,6 +753,28 @@ void display_Setter(float *value, int multiplier, uint8_t printlevel, String lab
 	display_static = false;
 }
 
+void display_Setter_sizesensor(float* size_cal, float* analog_val, float multiplier, uint8_t printlevel, String label)
+{	
+	if (display_dynamic)
+	{
+		cursor(printlevel, 1);
+		lcd.print(*size_cal);
+		lcd.print(" ");
+		cursor(printlevel, 6);
+		lcd.print(analog_ave);
+		lcd.print(" ");
+	}
+
+	if (display_static)
+	{
+		cursor(1, 0);
+		lcd.print(label);
+		encoder->getDirection(); // resets value of direction before using it to set
+	}
+	*size_cal += (int(encoder->getDirection()) * multiplier);
+	*analog_val = analog_ave;
+	display_static = false;
+}
 
 void display_lcd()
 {
@@ -1081,11 +1122,11 @@ void display_lcd()
 						cursor(5, 1);
 						lcd.print("SAVE");
 						cursor(2, 4);
-						lcd.print(heaterA.kP);
+						lcd.print(round(heaterA.kP));
 						cursor(3, 4);
-						lcd.print(heaterA.kI);
+						lcd.print(round(heaterA.kI));
 						cursor(4, 4);
-						lcd.print(heaterA.kD);
+						lcd.print(round(heaterA.kD));
 						display_static = false;
 					}
 					break;
@@ -1160,11 +1201,11 @@ void display_lcd()
 						cursor(5, 1);
 						lcd.print("SAVE");
 						cursor(2, 4);
-						lcd.print(heaterB.kP);
+						lcd.print(round(heaterB.kP));
 						cursor(3, 4);
-						lcd.print(heaterB.kI);
+						lcd.print(round(heaterB.kI));
 						cursor(4, 4);
-						lcd.print(heaterB.kD);
+						lcd.print(round(heaterB.kD));
 						display_static = false;
 					}
 					break;
@@ -1239,11 +1280,11 @@ void display_lcd()
 						cursor(5, 1);
 						lcd.print("SAVE");
 						cursor(2, 4);
-						lcd.print(heaterC.kP);
+						lcd.print(round(heaterC.kP));
 						cursor(3, 4);
-						lcd.print(heaterC.kI);
+						lcd.print(round(heaterC.kI));
 						cursor(4, 4);
-						lcd.print(heaterC.kD);
+						lcd.print(round(heaterC.kD));
 						display_static = false;
 					}
 					break;
@@ -1324,11 +1365,11 @@ void display_lcd()
 					cursor(5, 1);
 					lcd.print("SAVE");
 					cursor(2, 4);
-					lcd.print(puller.kP);
+					lcd.print(round(puller.kP));
 					cursor(3, 4);
-					lcd.print(puller.kI);
+					lcd.print(round(puller.kI));
 					cursor(4, 4);
-					lcd.print(puller.kD);
+					lcd.print(round(puller.kD));
 					display_static = false;
 				}
 				break;
@@ -1384,6 +1425,100 @@ void display_lcd()
 			}
 			break;
 
+		case 4:
+			switch (menulevel[2])
+			{
+			case 0:
+				selector(8);
+				if (display_static)
+				{
+					cursor(1, 1);
+					lcd.print("back");
+					cursor(7, 1);
+					lcd.print("SAVE");
+					cursor(8, 1);
+					lcd.print("RESET");
+					cursor(2, 1);
+					lcd.print(dia_size_cal[1]);
+					cursor(2, 6);
+					lcd.print(int(dia_analog_val[1]));
+					cursor(3, 1);
+					lcd.print(dia_size_cal[2]);
+					cursor(3, 6);
+					lcd.print(int(dia_analog_val[2]));
+					cursor(4, 1);
+					lcd.print(dia_size_cal[3]);
+					cursor(4, 6);
+					lcd.print(int(dia_analog_val[3]));
+					cursor(6, 1);
+					lcd.print(dia_size_cal[4]);
+					cursor(6, 6);
+					lcd.print(int(dia_analog_val[4]));
+					display_static = false;
+				}
+				break;
+
+			case 1: // calibrate/size sensor/back
+				menulevel[1] = 0;
+				menulevel[2] = 0;
+				break;	
+			
+			case 2:
+				if (!display_valuesetter)
+				{
+					menulevel[2] = 0;
+					encoder->setPosition(1);
+					break;
+				}
+				display_Setter_sizesensor(&dia_size_cal[1], &dia_analog_val[1], 0.01, 2, "Calibration pin 1");
+				break;	
+
+			case 3:
+				if (!display_valuesetter)
+				{
+					menulevel[2] = 0;
+					encoder->setPosition(2);
+					break;
+				}
+				display_Setter_sizesensor(&dia_size_cal[2], &dia_analog_val[2], 0.01, 3, "Calibration pin 2");
+				break;	
+
+			case 4:
+				if (!display_valuesetter)
+				{
+					menulevel[2] = 0;
+					encoder->setPosition(3);
+					break;
+				}
+				display_Setter_sizesensor(&dia_size_cal[3], &dia_analog_val[3], 0.01, 4, "Calibration pin 3");
+				break;	
+
+			case 6:
+				if (!display_valuesetter)
+				{
+					menulevel[2] = 0;
+					encoder->setPosition(5);
+					break;
+				}
+				display_Setter_sizesensor(&dia_size_cal[4], &dia_analog_val[4], 0.01, 6, "Calibration pin 4");
+				break;	
+
+			case 7:
+				save_cal_sizesensor();
+				menulevel[2] = 0;
+				break;
+
+			case 8:
+				load_cal_sizesensor();
+				menulevel[2] = 0;
+				break;
+
+			default:
+				menulevel[2] = 0;
+				break;
+			}
+			break;
+
 		default:
 			menulevel[1] = 0;
 			break;
@@ -1435,12 +1570,20 @@ void display_lcd()
 			menulevel[1] = 0;
 			break;
 
-		case 4: // settings/save to EEPROM
+		case 4: // settings/restore defaults
 			heaterA.Set_kPID(450, 20, 5, REVERSE);
 			heaterB.Set_kPID(450, 20, 5, REVERSE);
 			heaterC.Set_kPID(450, 20, 5, REVERSE);
 			puller.Set_kPID(100000, 5000, 500, DIRECT);
 			save_cal_all();
+			float dia_analog_val_def[6] = {0, 600, 622, 692, 883, 1023};
+			float dia_size_cal_def[6] = {3, 2.00, 1.75, 1.60, 1.20, 0};
+			for (uint8_t i = 0; i < 6; i++)
+			{
+				EEPROM.put(dia_analog_val_idx[i], dia_analog_val_def[i]);
+				EEPROM.put(dia_size_cal_idx[i], dia_size_cal_def[i]);
+			}
+			load_cal_all();
 			menulevel[0] = 0;
 			menulevel[1] = 0;
 			break;
