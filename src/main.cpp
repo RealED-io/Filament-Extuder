@@ -288,6 +288,8 @@ void loop()
 			Serial.print(", ");
 			Serial.print(RPM);
 			Serial.print(", ");
+			Serial.print(OCR3A);
+			Serial.print(", ");
 			Serial.print(convert2dia(analog_ave));
 			Serial.println();
 		}
@@ -1107,7 +1109,7 @@ void display_lcd()
 				switch (menulevel[3])
 				{
 				case 0:
-					selector(5);
+					selector(6);
 					// run only once to save processing time
 					if (display_static)
 					{
@@ -1121,6 +1123,8 @@ void display_lcd()
 						lcd.print("kD");
 						cursor(5, 1);
 						lcd.print("SAVE");
+						cursor(6, 1);
+						lcd.print("RESET");
 						cursor(2, 4);
 						lcd.print(round(heaterA.kP));
 						cursor(3, 4);
@@ -1176,6 +1180,13 @@ void display_lcd()
 					menulevel[3] = 0;
 					break;
 				
+				case 6:
+					load_cal(heaterA.idx_kP, &heaterA.kP, heaterA.idx_kI, &heaterA.kI, heaterA.idx_kD, &heaterA.kD);
+					encoder->setPosition(1);
+					menulevel[2] = 0;
+					menulevel[3] = 0;
+					break;			
+
 				default:
 					menulevel[3] = 0;
 					break;	
@@ -1186,7 +1197,7 @@ void display_lcd()
 				switch (menulevel[3])
 				{
 				case 0:
-					selector(5);
+					selector(6);
 					// run only once to save processing time
 					if (display_static)
 					{
@@ -1200,6 +1211,8 @@ void display_lcd()
 						lcd.print("kD");
 						cursor(5, 1);
 						lcd.print("SAVE");
+						cursor(6, 1);
+						lcd.print("RESET");
 						cursor(2, 4);
 						lcd.print(round(heaterB.kP));
 						cursor(3, 4);
@@ -1254,6 +1267,13 @@ void display_lcd()
 					menulevel[2] = 0;
 					menulevel[3] = 0;
 					break;
+
+				case 6:
+					load_cal(heaterB.idx_kP, &heaterB.kP, heaterB.idx_kI, &heaterB.kI, heaterB.idx_kD, &heaterB.kD);
+					encoder->setPosition(2);
+					menulevel[2] = 0;
+					menulevel[3] = 0;
+					break;
 				
 				default:
 					menulevel[3] = 0;
@@ -1265,7 +1285,7 @@ void display_lcd()
 				switch (menulevel[3])
 				{
 				case 0:
-					selector(5);
+					selector(6);
 					// run only once to save processing time
 					if (display_static)
 					{
@@ -1279,6 +1299,8 @@ void display_lcd()
 						lcd.print("kD");
 						cursor(5, 1);
 						lcd.print("SAVE");
+						cursor(6, 1);
+						lcd.print("RESET");
 						cursor(2, 4);
 						lcd.print(round(heaterC.kP));
 						cursor(3, 4);
@@ -1334,6 +1356,13 @@ void display_lcd()
 					menulevel[3] = 0;
 					break;
 				
+				case 6:
+					load_cal(heaterC.idx_kP, &heaterC.kP, heaterC.idx_kI, &heaterC.kI, heaterC.idx_kD, &heaterC.kD);
+					encoder->setPosition(3);
+					menulevel[2] = 0;
+					menulevel[3] = 0;
+					break;
+
 				default:
 					menulevel[3] = 0;
 					break;	
@@ -1350,7 +1379,7 @@ void display_lcd()
 			switch (menulevel[2])
 			{
 			case 0:
-				selector(5);
+				selector(6);
 				// run only once to save processing time
 				if (display_static)
 				{
@@ -1364,6 +1393,8 @@ void display_lcd()
 					lcd.print("kD");
 					cursor(5, 1);
 					lcd.print("SAVE");
+					cursor(6, 1);
+					lcd.print("RESET");
 					cursor(2, 4);
 					lcd.print(round(puller.kP));
 					cursor(3, 4);
@@ -1419,6 +1450,13 @@ void display_lcd()
 				menulevel[2] = 0;
 				break;
 			
+			case 6:
+				load_cal(puller.idx_kP, &puller.kP, puller.idx_kI, &puller.kI, puller.idx_kD, &puller.kD);
+				encoder->setPosition(2);
+				menulevel[1] = 0;
+				menulevel[2] = 0;
+				break;
+
 			default:
 				menulevel[2] = 0;
 				break;	
