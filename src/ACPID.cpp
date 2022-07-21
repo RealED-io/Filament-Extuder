@@ -43,8 +43,8 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
 
     Error = (Setpoint - Input);
     
-    //disable Integral when Error is high
-    if(Error > PID_I_disableatError)
+    //disable Integral when Error is high / reset PID_I after passing disableatError
+    if((Error < PID_I_disableatError) && (Error_Previous > PID_I_disableatError))
     {
         PID_I = 0;
     }
@@ -52,7 +52,7 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
     //Reset PID_I after passing set
     if (PID_I_reset)
     {
-        if((Error < 0) && (Error_Previous > 0)){
+        if((Error < 0) && (Error_Previous >= 0) || (Error > 0) && (Error_Previous <= 0)){
             if (PID_Direction)
             {
                 PID_I = Delay_Min;      
