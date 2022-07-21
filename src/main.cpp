@@ -1716,7 +1716,7 @@ void display_lcd()
 			{
 				// cursor(1, 0);
 				// lcd.print("BSME 4-2");
-				cursor(1, 7);
+				cursor(1, 1);
 				lcd.print("BSME 4-2 2018-2022");
 				cursor(2, 1);
 				lcd.print("Denisse");
