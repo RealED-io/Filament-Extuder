@@ -202,9 +202,9 @@ void setup()
 	heaterB.Range(pulse_delay_min, pulse_delay_max);
 	heaterC.Range(pulse_delay_min, pulse_delay_max);
 
-	heaterA.PID_I_disableatError = 30;
-	heaterB.PID_I_disableatError = 30;
-	heaterC.PID_I_disableatError = 30;
+	heaterA.PID_I_disableatError = 5;
+	heaterB.PID_I_disableatError = 5;
+	heaterC.PID_I_disableatError = 5;
 
 	puller.Set_setpoint(1.75);
 	puller.Set_kPID(100000, 5000, 500, DIRECT);
