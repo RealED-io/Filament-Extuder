@@ -1719,11 +1719,11 @@ void display_lcd()
 				cursor(1, 7);
 				lcd.print("FilEx");
 				cursor(2, 1);
-				lcd.print("Nichole");
+				lcd.print("Denisse");
 				cursor(3, 1);
 				lcd.print("bitsuki");
 				cursor(4, 2);
-				lcd.print("D'Aems");
+				lcd.print("D'AEms");
 				cursor(6, 0);
 				lcd.print("densanity");
 				cursor(7, 1);
