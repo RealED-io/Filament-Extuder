@@ -299,11 +299,11 @@ void loop()
 	{
 		if (currentMillis - previousMillis_logging >= Delay_logging)
 		{
-			int dutyA = (pulse_delay_max - heaterA.Pulse_Delay) / pulse_reset_delay;
-			int dutyB = (pulse_delay_max - heaterB.Pulse_Delay) / pulse_reset_delay;
-			int dutyC = (pulse_delay_max - heaterC.Pulse_Delay) / pulse_reset_delay;
+			int dutyA = ((pulse_delay_max - heaterA.Pulse_Delay) / pulse_reset_delay) * 100;
+			int dutyB = ((pulse_delay_max - heaterB.Pulse_Delay) / pulse_reset_delay) * 100;
+			int dutyC = ((pulse_delay_max - heaterC.Pulse_Delay) / pulse_reset_delay) * 100;
 			float stepRPM = 600000 / OCR3A;
-			
+
 			previousMillis_logging = currentMillis;
 			Serial.print(heaterA.Input);
 			Serial.print(", ");
