@@ -77,7 +77,10 @@ bool SERIAL_LOGGING = false;
 uint8_t selectorButton = 0;
 static int oldposition;
 uint8_t menulevel[5] = {0, 0, 0, 0, 0};
-String RPM;
+float RPM;
+String RPM_string;
+float stepRPM;
+String stepRPM_string;
 float dia_analog_val[6] = {};
 float dia_size_cal[6] = {};
 // float dia_analog_val[6] = {0, 600, 622, 692, 883, 1023};
@@ -194,9 +197,9 @@ void setup()
 	heaterB.Set_setpoint(0);
 	heaterC.Set_setpoint(0);
 
-	heaterA.Set_kPID(450, 20, 5, REVERSE);
-	heaterB.Set_kPID(450, 20, 5, REVERSE);
-	heaterC.Set_kPID(450, 20, 5, REVERSE);
+	heaterA.Set_kPID(200, 7, 1, REVERSE);			// to be overwritten by saved calibration
+	heaterB.Set_kPID(200, 7, 1, REVERSE);
+	heaterC.Set_kPID(200, 7, 1, REVERSE);
 
 	heaterA.Range(pulse_delay_min, pulse_delay_max);
 	heaterB.Range(pulse_delay_min, pulse_delay_max);
@@ -207,9 +210,9 @@ void setup()
 	heaterC.PID_I_disableatError = 5;
 
 	puller.Set_setpoint(1.75);
-	puller.Set_kPID(100000, 5000, 500, DIRECT);
+	puller.Set_kPID(100000, 5000, 500, DIRECT);		// to be overwritten by saved calibration
 	puller.Range(motor_pulse_delay_min, motor_pulse_delay_max);
-	puller.PID_I_reset = true;
+	puller.PID_I_reset = false;
 
 	// EEPROM INDEX
 	heaterA.EEPROM_idx(4, 8, 12, 16);
@@ -270,6 +273,8 @@ void loop()
 	menuleveler();
 	display_lcd();
 	read_RPM();
+	stepRPM = 600000 / OCR3A;
+	stepRPM_string = stepRPM;
 
 	if (currentMillis - previousMillis_read_dia >= Delay_read_dia)
 	{
@@ -302,7 +307,6 @@ void loop()
 			int dutyA = ((pulse_delay_max - heaterA.Pulse_Delay) / pulse_reset_delay) * 100;
 			int dutyB = ((pulse_delay_max - heaterB.Pulse_Delay) / pulse_reset_delay) * 100;
 			int dutyC = ((pulse_delay_max - heaterC.Pulse_Delay) / pulse_reset_delay) * 100;
-			float stepRPM = 600000 / OCR3A;
 
 			previousMillis_logging = currentMillis;
 			Serial.print(heaterA.Input);
@@ -461,6 +465,7 @@ float read_RPM()
 	}		
 	float ret = 60000 / (4 * Tachotime);
 	RPM = ret;
+	RPM_string = ret;
 	return ret; // 1000 ms/s * 60 s  / ms
 }
 
@@ -997,9 +1002,10 @@ void display_lcd()
 					lcd.print(" ");
 					cursor(5, 6);
 					if (motor_run)
-						lcd.print(RPM.substring(0,4));
-					// cursor(6, 6);
-					// lcd.print(RPM.substring(0,4));
+						lcd.print(RPM_string.substring(0,4));
+					cursor(6, 6);
+					if (stepper_run)
+						lcd.print(stepRPM_string.substring(0,4));
 					cursor(7, 6);
 					// lcd.print(analog_ave);
 					lcd.print(convert2dia(analog_ave));
@@ -1020,7 +1026,7 @@ void display_lcd()
 					cursor(5, 1);
 					if (motor_run)
 					{
-						lcd.print("Motor ON");
+						lcd.print("Motr ON");
 					}
 					else
 					{
@@ -1029,7 +1035,7 @@ void display_lcd()
 					cursor(6, 1);
 					if (stepper_run)
 					{
-						lcd.print("Stepr ON");
+						lcd.print("Stpr ON");
 					}
 					else
 					{
@@ -1685,9 +1691,9 @@ void display_lcd()
 			heaterC.Set_setpoint(0);
 			puller.Set_setpoint(1.75);
 			save_set();
-			heaterA.Set_kPID(450, 20, 5, REVERSE);
-			heaterB.Set_kPID(450, 20, 5, REVERSE);
-			heaterC.Set_kPID(450, 20, 5, REVERSE);
+			heaterA.Set_kPID(200, 7, 1, REVERSE);
+			heaterB.Set_kPID(200, 7, 1, REVERSE);
+			heaterC.Set_kPID(200, 7, 1, REVERSE);
 			puller.Set_kPID(100000, 5000, 500, DIRECT);
 			save_cal_all();
 			float dia_analog_val_def[6] = {0, 600, 622, 692, 883, 1023};
@@ -1717,7 +1723,7 @@ void display_lcd()
 				// cursor(1, 0);
 				// lcd.print("BSME 4-2");
 				cursor(1, 1);
-				lcd.print("BSME 4-2 2018-2022");
+				lcd.print("BSME 4-2 batch 2022");
 				cursor(2, 1);
 				lcd.print("Denisse");
 				cursor(3, 1);

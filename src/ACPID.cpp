@@ -71,6 +71,18 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
         }  
     }
 
+    //Limit PID_I for faster response
+    if (PID_I_limit)
+    {
+        if (PID_I < Delay_Min)
+        {
+            PID_I = Delay_Min;
+        } 
+        if (PID_I > Delay_Max)
+        {
+            PID_I = Delay_Max;
+        } 
+    }
 
     //individually compute for P, I, and D
     PID_P = kP * Error;

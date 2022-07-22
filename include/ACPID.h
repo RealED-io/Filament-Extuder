@@ -14,6 +14,7 @@ class ACPID{
 
         bool PID_Direction;     //true for reversed, false for direct
         bool PID_I_reset = true;
+        bool PID_I_limit = true;
         float Input;            //PID input
         float Pulse_Delay;     //PID output
         float Setpoint;        //PID setpoint  
