@@ -22,14 +22,13 @@
 #endif
 // or separate every debug
 
-// pin declarations
+// PIN DECLARATIONS
 #define HALL_SENSOR_PIN A8
 #define TACHO A9
-// #define MOTOR_STEP A15
-const uint8_t MOTOR_STEP = 5;
-const uint8_t MOTOR_PULSE = 31;
-const uint8_t zero_cross_pin = 18; // zero cross pin for hardware interrupt
-const uint8_t SPI_CLOCK = 52;	   // for thermocouples
+const uint8_t STEPPER_PULSE = 5;				// stepper motor pulse pin (OCR3A)
+const uint8_t MOTOR_PULSE = 31;					// AC motor pulse pin/or enable pin	
+const uint8_t ZERO_CROSS_PIN = 18; 				// zero cross pin for hardware interrupt
+const uint8_t SPI_CLOCK = 52;	   				// for thermocouples
 const uint8_t SPI_MISO = 50;
 const uint8_t SPI_thermoA = 30;
 const uint8_t SPI_thermoB = 32;
@@ -41,19 +40,20 @@ const uint8_t ROTARY_1B = 3;
 // const uint8_t STEP = 1;
 // PULSE PIN 28, 26, 24
 
-// constants
-const int pulse_reset_delay = 16666;
-const int pulse_delay_max = 16660;
-const int pulse_delay_min = 60;
-const int motor_pulse_delay_max = 35000;
-const int motor_pulse_delay_min = 10000;
-bool zero_cross = false;
-const unsigned int Delay_readtemp = 250;
-const unsigned int Delay_puller = 250;
-const unsigned int Delay_display = 1000;
-const unsigned int Delay_logging = 1000;
-const unsigned int Delay_read_dia = 25;
-const unsigned int tacho_timeout = 10000;		// MOTOR TIMEOUT
+// changeable constants
+const int pulse_delay_max = 16660;				// max phase control pulse delay in n / 2E6 secs for every zerocross
+const int pulse_delay_min = 60;					// min phase control pulse delay in n / 2E6 secs for every zerocross
+const int pulse_reset_delay = 16666;			// reset delay for phase control pulse in n / 2E6 secs for every zerocross
+const int motor_pulse_delay_max = 35000;		// max stepper PWM pulsewidth in n / 2E6 secs
+const int motor_pulse_delay_min = 10000;		// min stepper PWM pulsewidth in n / 2E6 secs
+const unsigned int Delay_readtemp = 250;		// temperature reading delay in ms
+const unsigned int Delay_puller = 250;			// puller speed updates delay in ms
+const unsigned int Delay_display = 1000;		// display delay in ms
+const unsigned int Delay_logging = 1000;		// serial logging delay in ms
+const unsigned int Delay_read_dia = 25;			// infidel read delay in ms
+const unsigned int tacho_timeout = 10000;		// tachometer reading timeout in ms
+
+
 unsigned long currentMillis = 0;
 unsigned long previousMillis_display = 0;
 unsigned long previousMillis_temp = 0;
@@ -62,6 +62,8 @@ unsigned long previousMillis_logging = 0;
 unsigned long previousMillis_read_dia = 0;
 unsigned long motor_pulsecount = 0;
 int analog_ave = 0;
+
+bool zero_cross = false;
 bool read_loop = false;
 bool isButton = false;
 bool display_static = true;
@@ -185,8 +187,8 @@ void setup()
 
 	sei(); // continue interrupts
 
-	pinMode(zero_cross_pin, INPUT_PULLUP);
-	attachInterrupt(digitalPinToInterrupt(zero_cross_pin), reset_timer, RISING);
+	pinMode(ZERO_CROSS_PIN, INPUT_PULLUP);
+	attachInterrupt(digitalPinToInterrupt(ZERO_CROSS_PIN), reset_timer, RISING);
 	encoder = new RotaryEncoder(ROTARY_1A, ROTARY_1B, RotaryEncoder::LatchMode::FOUR3);
 	attachInterrupt(digitalPinToInterrupt(ROTARY_BUTTON), buttonPressed, FALLING); // reads button after release
 	attachInterrupt(digitalPinToInterrupt(ROTARY_1A), checkPosition, CHANGE);
@@ -225,7 +227,7 @@ void setup()
 	// hall sensor
 	pinMode(HALL_SENSOR_PIN, INPUT);
 	pinMode(TACHO, INPUT_PULLUP);
-	pinMode(MOTOR_STEP, OUTPUT);
+	pinMode(STEPPER_PULSE, OUTPUT);
 	pinMode(MOTOR_PULSE, OUTPUT);
 
 
