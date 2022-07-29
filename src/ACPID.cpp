@@ -110,16 +110,6 @@ void ACPID::Compute(unsigned int Compute_Delay)      //Compute_Delay unit is in 
         Pulse_Delay = PID_value;
     }
 
-    //reversed direction for heater control
-    // if(PID_Direction)
-    // {
-    //     Pulse_Delay = (Delay_Max + Delay_Min) - PID_value;        
-    // }
-    // else
-    // {
-    //     Pulse_Delay = PID_value;
-    // }
-
     Error_Previous = Error;
     
     #if LOGGING >= 5
@@ -159,11 +149,5 @@ void ACPID::EEPROM_idx(unsigned int index_Set, unsigned int index_kP, unsigned i
     idx_kD = index_kD;
 }
 
-// void ACPID::Set_EEPROM_idx(unsigned int idxP, unsigned int idxI, unsigned int idxD)
-// {
-//     EEPROM_kP = idxP;
-//     EEPROM_kI = idxI;
-//     EEPROM_kD = idxD;
-// }
 
 

@@ -44,7 +44,6 @@ class ACPID{
         void Range(unsigned int, unsigned int);
         void Set_kPID(float, float, float, bool);
         void EEPROM_idx(unsigned int, unsigned int, unsigned int, unsigned int);
-        // void Set_EEPROM_idx(unsigned int, unsigned int, unsigned int);
 };
 
 #endif
