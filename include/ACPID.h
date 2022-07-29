@@ -33,7 +33,7 @@ class ACPID{
         float PID_D;
         float PID_value;
 
-        float PID_I_disableatError = 60000;
+        float PID_I_resetatError = 60000;
         float Error_Previous;
 
         unsigned int Delay_Min;
